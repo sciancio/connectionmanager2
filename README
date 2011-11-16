@@ -25,6 +25,8 @@ Description
 Simple GUI app for Gnome 3 that provides a menu for 
 initiating SSH/Telnet connections.
 
+Based on sshmenu software of Grant McLean (http://sshmenu.sourceforge.net/)
+
 ------------------------
 Installation
 ------------------------
@@ -51,6 +53,7 @@ v0.1    16 Nov 2011 Initial version for GNOME 3.2
 ------------------------
 Thanks to
 ------------------------
+Grant McLean for sshmenu software
 Luigi Faragalli for JSON 
 Valeria Costa
 
