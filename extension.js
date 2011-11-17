@@ -34,6 +34,7 @@ const Util = imports.misc.util;
 const Gettext = imports.gettext.domain('gnome-shell-extensions');
 const _ = Gettext.gettext;
 
+
 function ConnectionManager(metadata) {
 	this._init.apply(this, arguments);
 }
@@ -42,9 +43,9 @@ ConnectionManager.prototype = {
 	__proto__: PanelMenu.SystemStatusButton.prototype,
 
 	_init: function(metadata) {
-	
+
 		this._configFile = GLib.get_home_dir() + '/' + metadata.sw_config;
-		this._prefFile = global.userdatadir + '/extensions/' + metadata.uUid + "/" + metadata.sw_bin;
+		this._prefFile = global.userdatadir + '/extensions/' + metadata.uuid + "/" + metadata.sw_bin;
 
 		PanelMenu.SystemStatusButton.prototype._init.call(this, '', 'Connection Manager');
 
@@ -65,18 +66,16 @@ ConnectionManager.prototype = {
 	_readConf: function () {
 
 		this.menu.removeAll();
+		
+		if (GLib.file_test(this._configFile, GLib.FileTest.EXISTS) ) {
 
-		try {
 			let filedata = GLib.file_get_contents(this._configFile, null, 0);
 			let jsondata = JSON.parse(filedata[1]);
 			let root = jsondata['Root'];
 
 			this._readTree(root, this, "");
-		}
-		catch (e) {
-			global.logError("CONNMGR: Error reading config file = " + e);
-		}
-			finally {
+		} else {
+			global.logError("CONNMGR: Error reading config file " + this._configFile);
 			let filedata = null
 		}
 
@@ -84,9 +83,9 @@ ConnectionManager.prototype = {
 		this.menu.addMenuItem(menuSepPref, this.menu.length);
 		
 		let menuPref = new PopupMenu.PopupMenuItem("Connection Manager Settings");
-		menuPref.connect('activate', function() {
-			Util.spawnCommandLine('python ' + this._prefFile); 
-		});
+		menuPref.connect('activate', Lang.bind(this, function() {
+			Util.spawnCommandLine('python ' + this._prefFile);
+		}));
 		this.menu.addMenuItem(menuPref, this.menu.length+1);
 
 		let menuReload = new PopupMenu.PopupMenuItem("Configuration Reload");
