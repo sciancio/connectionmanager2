@@ -67,9 +67,7 @@ ConnectionManager.prototype = {
 
 	_readConf: function () {
 
-		global.log("CM1: " + this._configFile);
 		this.menu.removeAll();
-		global.log("CM2: " + this._configFile);
 		
 		if (GLib.file_test(this._configFile, GLib.FileTest.EXISTS) ) {
 
@@ -119,8 +117,6 @@ ConnectionManager.prototype = {
 		command += ' -e ' + (child.Protocol + " " + sshparams_noenv).quote();
 
 		command = 'sh -c ' + command.quote();
-
-		global.log("CM: command: " + command);
 
 		return command;
 	},
