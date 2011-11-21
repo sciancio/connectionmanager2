@@ -24,6 +24,7 @@ const Lang = imports.lang;
 const Shell = imports.gi.Shell;
 
 const Mainloop = imports.mainloop;
+const Signals = imports.signals;
 
 const Main = imports.ui.main;
 const PanelMenu = imports.ui.panelMenu;
@@ -33,6 +34,7 @@ const Util = imports.misc.util;
 
 const Gettext = imports.gettext.domain('gnome-shell-extensions');
 const _ = Gettext.gettext;
+
 
 
 function ConnectionManager(metadata) {
@@ -65,7 +67,9 @@ ConnectionManager.prototype = {
 
 	_readConf: function () {
 
+		global.log("CM1: " + this._configFile);
 		this.menu.removeAll();
+		global.log("CM2: " + this._configFile);
 		
 		if (GLib.file_test(this._configFile, GLib.FileTest.EXISTS) ) {
 
@@ -99,13 +103,24 @@ ConnectionManager.prototype = {
 	_createCommand: function(child) {
 
 		let command = 'gnome-terminal';
-		command += ' --title=' + (child.Name).quote();
+
+		sshparams = child.Host.match(/^((?:\w+="(?:\\"|[^"])*" +)*)/g)[0];
+		sshparams_noenv = child.Host.match(/^(?:\w+="(?:\\"|[^"])*" +)*(.*)$/)[1];
+
+		if (sshparams && sshparams.length > 0) {
+			command = sshparams + ' ' + command + ' --disable-factory';
+		}
 
 		if (child.Profile && child.Profile.length > 0) {
 			command += ' --window-with-profile=' + (child.Profile).quote();
 		}
 
-		command += ' -e ' + (child.Protocol + " " + child.Host).quote()
+		command += ' --title=' + (child.Name).quote();
+		command += ' -e ' + (child.Protocol + " " + sshparams_noenv).quote();
+
+		command = 'sh -c ' + command.quote();
+
+		global.log("CM: command: " + command);
 
 		return command;
 	},

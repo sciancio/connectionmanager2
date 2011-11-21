@@ -71,20 +71,20 @@ class ConfIO(str):
 
 
 	def get_item(self, t, iter):
-		return '[{"Type":"'+str(t.get_value(iter, 0))+'",'+ \
-		'"Name":"'+str(t.get_value(iter, 1))+'",'+ \
-		'"Host":"'+str(t.get_value(iter, 2))+'",'+ \
-		'"Profile":"'+str(t.get_value(iter, 3))+'",'+ \
-		'"Protocol":"'+str(t.get_value(iter, 4))+'",'+ \
+		return '[{"Type":'+json.dumps(str(t.get_value(iter, 0)))+','+ \
+		'"Name":'+json.dumps(str(t.get_value(iter, 1)))+','+ \
+		'"Host":'+json.dumps(str(t.get_value(iter, 2)))+','+ \
+		'"Profile":'+json.dumps(str(t.get_value(iter, 3)))+','+ \
+		'"Protocol":'+json.dumps(str(t.get_value(iter, 4)))+','+ \
 		'"Children":[]' \
 		'}]'
 
 	def get_folder(self, t, iter):
-		return '"Type":"'+str(t.get_value(iter, 0))+'",'+ \
-		'"Name":"'+str(t.get_value(iter, 1))+'",'+ \
-		'"Host":"'+str(t.get_value(iter, 2))+'",'+ \
-		'"Profile":"'+str(t.get_value(iter, 3))+'",'+ \
-		'"Protocol":"'+str(t.get_value(iter, 4))+'",'+ \
+		return '"Type":'+json.dumps(str(t.get_value(iter, 0)))+','+ \
+		'"Name":'+json.dumps(str(t.get_value(iter, 1)))+','+ \
+		'"Host":'+json.dumps(str(t.get_value(iter, 2)))+','+ \
+		'"Profile":'+json.dumps(str(t.get_value(iter, 3)))+','+ \
+		'"Protocol":'+json.dumps(str(t.get_value(iter, 4)))+','+ \
 		'"Children":'
 
 
@@ -126,8 +126,8 @@ class ConfIO(str):
 	def read(self):
 		configuration = ""
 		if (os.path.exists(self.configuration_file) and 
-			  os.path.isfile(self.configuration_file)):
-			  
+			os.path.isfile(self.configuration_file)):
+
 			in_file = open(self.configuration_file,"r")
 			configuration = self.custom_decode(json.load(in_file))
 			in_file.close()
@@ -144,7 +144,7 @@ class ConfIO(str):
 		self.json_output = ''
 		self.custom_encode(treestore1, Root)
 		self.json_output = '{"Root": ['+self.json_output+']}'
-	
+
 		out_file = open(self.configuration_file,"w")
 		json.dump(json.loads(self.json_output), out_file, indent=2)
 		out_file.close()
@@ -206,7 +206,6 @@ This involves loss of information, it is recommended to cancel it.")
 		self.treestore = Gtk.TreeStore(str, str, str, str)
 		# ---------------------------------------------	
 
-#		conf_file = "connmgr"
 		conf_file = os.getenv("HOME") + "/.connmgr"
 		self.configuration = ConfIO(conf_file)
 
@@ -219,7 +218,7 @@ This involves loss of information, it is recommended to cancel it.")
 		# TreeView
 		self.tv.set_model(self.treestore)
 		self.tv.set_reorderable(True)
-	#	self.tv.expand_all()
+		# self.tv.expand_all()
 		self.tv.set_level_indentation(5)
 		self.tv.set_show_expanders(True)
 
@@ -273,10 +272,10 @@ This involves loss of information, it is recommended to cancel it.")
 		mybox.pack_start(scrolled_window, True, True, 6)
 		mybox.pack_start(SpecButtons, False, False, 6)
 	
-		# Options Label
-		options = Gtk.Label('<span size="20000">Under Construction</span>')
-		options.set_justify(2)
-		options.set_use_markup(True)
+#		# Options Label
+#		options = Gtk.Label('<span size="20000">Under Construction</span>')
+#		options.set_justify(2)
+#		options.set_use_markup(True)
 
 	
 		# About Label
@@ -290,7 +289,7 @@ This involves loss of information, it is recommended to cancel it.")
 		notebook.set_scrollable(True)
 
 		notebook.append_page(mybox, Gtk.Label("Hosts"))
-		notebook.append_page(options, Gtk.Label("Options"))
+#		notebook.append_page(options, Gtk.Label("Options"))
 		notebook.append_page(label_about, Gtk.Label("About"))
 		notebook.set_current_page(0)
 
@@ -338,18 +337,6 @@ This involves loss of information, it is recommended to cancel it.")
 				if newrow[0] == '__sep__':
 					new_iter = self.treestore.insert_after(None, current_iter, newrow)
 					self.set_conf_modified(True)
-
-#			if newrow[0] == '__item__':
-#				if self.is_item(current_iter) or self.is_sep(current_iter):
-#					response, row = self.item_dialog(newrow)
-#					if response:
-#						new_iter = self.treestore.insert_after(None, current_iter, row)
-#						self.set_conf_modified(True)
-
-#			if newrow[0] == '__sep__':
-#				if self.is_sep(current_iter):
-#					new_iter = self.treestore.insert_after(None, current_iter, newrow)
-#					self.set_conf_modified(True)
 
 		else:
 			dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.ERROR,
@@ -515,7 +502,6 @@ This involves loss of information, it is recommended to cancel it.")
 		entry4 = Gtk.ComboBoxText()
 		protocol = ['ssh', 'telnet']
 		for index, item in enumerate(protocol):
-			print item
 			entry4.append_text(item)
 			if item == row[4]:
 				entry4.set_active(index)
