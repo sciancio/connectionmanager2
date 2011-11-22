@@ -36,7 +36,6 @@ const Gettext = imports.gettext.domain('gnome-shell-extensions');
 const _ = Gettext.gettext;
 
 
-
 function ConnectionManager(metadata) {
 	this._init.apply(this, arguments);
 }
@@ -46,8 +45,8 @@ ConnectionManager.prototype = {
 
 	_init: function(metadata) {
 
-		this._configFile = GLib.get_home_dir() + '/' + metadata.sw_config;
-		this._prefFile = global.userdatadir + '/extensions/' + metadata.uuid + "/" + metadata.sw_bin;
+		this._configFile = GLib.build_filenamev([GLib.get_home_dir(), metadata.sw_config]);
+		this._prefFile = GLib.build_filenamev([global.userdatadir, '/extensions/', metadata.uuid, metadata.sw_bin]);
 
 		PanelMenu.SystemStatusButton.prototype._init.call(this, '', 'Connection Manager');
 
@@ -60,7 +59,8 @@ ConnectionManager.prototype = {
 		// Update every 1 minute
 		GLib.timeout_add(0, 60000, Lang.bind(this, 
 			function () {
-				this._readConf(); 
+				this._readConf();
+				return true;
 			}));
 
 	},
