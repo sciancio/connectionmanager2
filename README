@@ -50,7 +50,9 @@ Version
 ------------------------
 v0.1    16 Nov 2011 Initial version for GNOME 3.2
 
-21Nov2011: added environment variable management
+21Nov2011: It's possible to pass environment variables directly to the 
+constructed command, allowing e.g. for sending a LC_ALL different from 
+the native one to the remote system etc. (thanks to Grzegorz Staniak for idea).
 
 ------------------------
 Thanks to
