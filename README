@@ -55,6 +55,13 @@ constructed command, allowing e.g. for sending a LC_ALL different from
 the native one to the remote system etc. (thanks to Grzegorz Staniak for idea).
 
 ------------------------
+How to migrate from sshmenu to cm tool
+------------------------
+You can migrate your SSHMenu configuration to CM extension with a simple script.
+Details here https://github.com/sciancio/connectionmanager/wiki/CM-Migration-script.
+
+
+------------------------
 Thanks to
 ------------------------
 Grant McLean for sshmenu software
