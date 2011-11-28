@@ -1,5 +1,5 @@
 //   ConnectionManager 3 - Simple GUI app for Gnome 3 that provides a menu 
-//   for initiating SSH/Telnet connections. 
+//   for initiating SSH/Telnet/Custom Apps connections. 
 //   Copyright (C) 2011  Stefano Ciancio
 //
 //   This library is free software; you can redistribute it and/or
@@ -56,12 +56,12 @@ ConnectionManager.prototype = {
 		this.actor.add_actor(label);
 
 		this._readConf();
-		// Update every 1 minute
-		GLib.timeout_add(0, 60000, Lang.bind(this, 
-			function () {
-				this._readConf();
-				return true;
-			}));
+//		// Update every 1 minute
+//		GLib.timeout_add(0, 60000, Lang.bind(this, 
+//			function () {
+//				this._readConf();
+//				return true;
+//			}));
 
 	},
 
@@ -100,23 +100,41 @@ ConnectionManager.prototype = {
 
 	_createCommand: function(child) {
 
-		let command = 'gnome-terminal';
+		let command = '';
 
-		sshparams = child.Host.match(/^((?:\w+="(?:\\"|[^"])*" +)*)/g)[0];
-		sshparams_noenv = child.Host.match(/^(?:\w+="(?:\\"|[^"])*" +)*(.*)$/)[1];
+		if (child.Type == '__item__') {
 
-		if (sshparams && sshparams.length > 0) {
-			command = sshparams + ' ' + command + ' --disable-factory';
+			command += 'gnome-terminal';
+
+			let sshparams = child.Host.match(/^((?:\w+="(?:\\"|[^"])*" +)*)/g)[0];
+			let sshparams_noenv = child.Host.match(/^(?:\w+="(?:\\"|[^"])*" +)*(.*)$/)[1];
+
+			if (sshparams && sshparams.length > 0) {
+				command = sshparams + ' ' + command + ' --disable-factory';
+			}
+
+			if (child.Profile && child.Profile.length > 0) {
+				command += ' --window-with-profile=' + (child.Profile).quote();
+			}
+
+			command += ' --title=' + (child.Name).quote();
+			command += ' -e ' + (child.Protocol + " " + sshparams_noenv).quote();
+
+			command = 'sh -c ' + command.quote() + ' &';
+
 		}
+		
+		if (child.Type == '__app__') {
+	
+			if (child.Protocol == 'True') {
+				command += 'gnome-terminal --title=' + (child.Name).quote() + ' -e ';
+				command += (child.Host).quote();
+				command += ' &';
+			} else {
+				command += child.Host;
+			}
 
-		if (child.Profile && child.Profile.length > 0) {
-			command += ' --window-with-profile=' + (child.Profile).quote();
 		}
-
-		command += ' --title=' + (child.Name).quote();
-		command += ' -e ' + (child.Protocol + " " + sshparams_noenv).quote();
-
-		command = 'sh -c ' + command.quote();
 
 		return command;
 	},
@@ -134,7 +152,7 @@ ConnectionManager.prototype = {
 
 			if (child.hasOwnProperty('Type')) {
 
-				if (child['Type'] == '__item__') {
+				if (child.Type == '__item__') {
 
 					menuItem = new PopupMenu.PopupMenuItem(ident+child.Name);
 					icon = new St.Icon({icon_name: 'terminal',
@@ -153,11 +171,39 @@ ConnectionManager.prototype = {
 					itemnr++;
 					
 				}
-				if (child['Type'] == '__sep__') {
+
+				if (child.Type == '__app__') {
+
+					menuItem = new PopupMenu.PopupMenuItem(ident+child.Name);
+					icon = new St.Icon({icon_name: 'gtk-execute',
+							icon_type: St.IconType.FULLCOLOR,
+							style_class: 'connmgr-icon' });
+					menuItem.addActor(icon, { align: St.Align.END});
+
+					let command = this._createCommand(child);
+					if (child.Protocol == 'True') {
+						menuItem.connect('activate', function() {
+							Util.spawnCommandLine(command); 
+						});
+					} else {
+						menuItem.connect('activate', function() {
+							Util.spawn(command.split(" ")); 
+						});
+					}
+					parent.menu.addMenuItem(menuItem, i);
+					
+					childHasItem = true;
+					commandAll[itemnr] = command;
+					itemnr++;
+					
+				}
+
+
+				if (child.Type == '__sep__') {
 					menuSep = new PopupMenu.PopupSeparatorMenuItem();
 					parent.menu.addMenuItem(menuSep, i);
 				}
-				if (child['Type'] == '__folder__') {
+				if (child.Type == '__folder__') {
 
 					menuSub = new PopupMenu.PopupSubMenuMenuItem(ident+child.Name);
 					icon = new St.Icon({icon_name: 'folder',

@@ -48,11 +48,15 @@ error message is.
 ------------------------
 Version
 ------------------------
-v0.1    16 Nov 2011 Initial version for GNOME 3.2
+v0.1 - 16 Nov 2011 Initial version for GNOME 3.2
 
 21Nov2011: It's possible to pass environment variables directly to the 
 constructed command, allowing e.g. for sending a LC_ALL different from 
 the native one to the remote system etc. (thanks to Grzegorz Staniak for idea).
+
+v0.2 - 28 Nov 2011: add support to launch any application (custom and not) 
+in and out a terminal shell. You can create your custom script and launch it from 
+CM menu.
 
 ------------------------
 How to migrate from sshmenu to cm tool

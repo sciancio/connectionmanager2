@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 
 from gi.repository import Gtk, Gdk
-import gconf
 from StringIO import StringIO
-import gobject
 
+import gobject
+import gconf
 import os.path
 import json
 
 
 #   ConnectionManager 3 - Simple GUI app for Gnome 3 that provides a menu 
-#   for initiating SSH/Telnet connections. 
+#   for initiating SSH/Telnet/Custom Apps connections. 
 #   Copyright (C) 2011  Stefano Ciancio
 #
 #   This library is free software; you can redistribute it and/or
@@ -51,16 +51,14 @@ class ConfIO(str):
 		
 		for child in dct:
 			child = child[0]
-		
-			if child['Type'] == '__item__':
-				treestore.append(parent, ['__item__', child['Name'], 
-							child['Host'], child['Profile'], child['Protocol']])
-	
-			if child['Type'] == '__sep__':
-				treestore.append(parent, ['__sep__', child['Name'], 
+
+			if child['Type'] == '__item__' or \
+				 child['Type'] == '__app__' or \
+				 child['Type'] == '__sep__' :
+				treestore.append(parent, [child['Type'], child['Name'], 
 							child['Host'], child['Profile'], child['Protocol']])
 
-			if child['Type'] == '__folder__':
+			if child['Type'] == '__folder__' :
 				parent_prec = parent
 				parent = treestore.append(parent, ['__folder__', 
 							child['Name'], None, None, None])
@@ -230,7 +228,7 @@ This involves loss of information, it is recommended to cancel it.")
 		column = [0, 1, 2, 3];
 		title = ["Title"]
 
-		# Design field	
+		# Design field
 		for index, item in enumerate(title):
 			renderer[index+1] = Gtk.CellRendererText()
 			column[index+1] = Gtk.TreeViewColumn(item, renderer[index+1], text=index+1)
@@ -239,16 +237,18 @@ This involves loss of information, it is recommended to cancel it.")
 		# Buttons
 		button1 = Gtk.Button("Add Host")
 		button1.connect("clicked", self.on_click_me_addhost)
-		button2 = Gtk.Button("Add Separator")
-		button2.connect("clicked", self.on_click_me_addsep)
-		button3 = Gtk.Button("Add SubMenu")
-		button3.connect("clicked", self.on_click_me_addmenu)
-		button4 = Gtk.Button("Remove")
-		button4.connect("clicked", self.on_click_me_remove)
-		button5 = Gtk.Button("Save Conf")
-		button5.connect("clicked", self.on_click_me_saveconf)
-		button6 = Gtk.Button("Close")
-		button6.connect("clicked", self.on_click_me_close)
+		button2 = Gtk.Button("Add App")
+		button2.connect("clicked", self.on_click_me_addapp)
+		button3 = Gtk.Button("Add Separator")
+		button3.connect("clicked", self.on_click_me_addsep)
+		button4 = Gtk.Button("Add SubMenu")
+		button4.connect("clicked", self.on_click_me_addmenu)
+		button5 = Gtk.Button("Remove")
+		button5.connect("clicked", self.on_click_me_remove)
+		button6 = Gtk.Button("Save Conf")
+		button6.connect("clicked", self.on_click_me_saveconf)
+		button7 = Gtk.Button("Close")
+		button7.connect("clicked", self.on_click_me_close)
 
 		# Specific Buttons
 		SpecButtons = Gtk.VButtonBox(spacing=6)
@@ -258,10 +258,11 @@ This involves loss of information, it is recommended to cancel it.")
 		SpecButtons.add(button3)
 		SpecButtons.add(button4)
 		SpecButtons.add(button5)
+		SpecButtons.add(button6)
 	
 		ExtButtons = Gtk.HButtonBox(margin_right=15, margin_bottom=6)
 		ExtButtons.set_layout(4)
-		ExtButtons.add(button6)
+		ExtButtons.add(button7)
 		# ButtonBox
 	
 		# UI design
@@ -318,7 +319,7 @@ This involves loss of information, it is recommended to cancel it.")
 		
 			if self.is_folder(current_iter):
 			
-				if newrow[0] == '__folder__' or newrow[0] == '__item__':
+				if newrow[0] == '__folder__' or newrow[0] == '__item__' or newrow[0] == '__app__':
 					response, row = self.item_dialog(newrow)
 					if response:
 						new_iter = self.treestore.insert_after(current_iter, None, row)
@@ -327,9 +328,8 @@ This involves loss of information, it is recommended to cancel it.")
 						new_iter = self.treestore.insert_after(current_iter, None, newrow)
 						self.set_conf_modified(True)
 
-			if self.is_item(current_iter) or self.is_sep(current_iter):
-			
-				if newrow[0] == '__folder__' or newrow[0] == '__item__':
+			if self.is_item(current_iter) or self.is_app(current_iter) or self.is_sep(current_iter):
+				if newrow[0] == '__folder__' or newrow[0] == '__item__' or newrow[0] == '__app__':
 					response, row = self.item_dialog(newrow)
 					if response:
 						new_iter = self.treestore.insert_after(None, current_iter, row)
@@ -352,8 +352,13 @@ This involves loss of information, it is recommended to cancel it.")
 	def on_click_me_addhost(self, button):
 		newrow = ['__item__', 'New Host ...', '-AX ...', 'Default', 'ssh']
 		self.__addElement(newrow)
+
+	# Add App
+	def on_click_me_addapp(self, button):
+		newrow = ['__app__', 'New App ...', '', '', '']
+		self.__addElement(newrow)
 	
-		 
+	
 	# Add Separator
 	def on_click_me_addsep(self, button):
 		newrow = ['__sep__', '_____________________', '', '', '']
@@ -448,6 +453,12 @@ This involves loss of information, it is recommended to cancel it.")
 		else:
 			return False
 
+	def is_app(self, iter):
+		if self.treestore.get_value (iter, 0) == '__app__':
+			return True
+		else:
+			return False
+
 	def is_sep(self, iter):
 		if self.treestore.get_value (iter, 0) == '__sep__':
 			return True
@@ -508,6 +519,16 @@ This involves loss of information, it is recommended to cancel it.")
 		
 		entry4.set_entry_text_column(0)
 
+		label5 = Gtk.Label("Command")
+		entry5 = Gtk.Entry()
+		entry5.set_text(row[2])
+		button5 = Gtk.Button("Choose File")
+		button5.connect("clicked", self.on_choose_file, entry5)
+
+		check7 = Gtk.CheckButton("Execute in shell")
+		if row[4] == 'True':
+			check7.set_active(True)
+
 
 		if row[0] == '__folder__':
 			table = Gtk.Table(1, 2, True, 
@@ -532,6 +553,21 @@ This involves loss of information, it is recommended to cancel it.")
 			table.attach(entry3, 1, 2, 2, 3)
 			table.attach(label4, 0, 1, 3, 4)
 			table.attach(entry4, 1, 2, 3, 4)
+
+		if row[0] == '__app__':
+			table = Gtk.Table(4, 2, True, 
+				margin_right=15, margin_bottom=15,
+				margin_top=15)
+			table.set_row_spacings(6)
+			table.set_col_spacings(6)
+	
+			table.attach(label1, 0, 1, 0, 1)
+			table.attach(entry1, 1, 2, 0, 1)
+	
+			table.attach(label5, 0, 1, 1, 2)
+			table.attach(entry5, 1, 2, 1, 2)
+			table.attach(button5, 1, 2, 2, 3)
+			table.attach(check7, 1, 2, 3, 4)
 
 		box.add(table)
 		dialog.show_all()
@@ -566,7 +602,20 @@ This involves loss of information, it is recommended to cancel it.")
 						eresponse = edialog.run()
 						if eresponse == Gtk.ResponseType.OK:
 							edialog.destroy()
-					
+
+				if row[0] == '__app__':
+					newrow = [row[0], entry1.get_text(), entry5.get_text(), 
+						row[3], str(check7.get_active())]
+					if entry1.get_text() != '' and entry5.get_text() != '':
+						dialog.destroy()
+						return True, newrow
+					else:
+						edialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.ERROR,
+							Gtk.ButtonsType.OK, "You must enter a title/command")
+						edialog.show_all()
+						eresponse = edialog.run()
+						if eresponse == Gtk.ResponseType.OK:
+							edialog.destroy()
 		
 			if response == Gtk.ResponseType.CANCEL:
 				newrow = row
@@ -605,6 +654,17 @@ This involves loss of information, it is recommended to cancel it.")
 
 			return True
 
+	def on_choose_file(self, widget, entry):
+		dialog = Gtk.FileChooserDialog("Please choose a file", self,
+			Gtk.FileChooserAction.OPEN,
+			(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+			Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
+
+		response = dialog.run()
+		if response == Gtk.ResponseType.OK:
+			entry.set_text(dialog.get_filename())
+
+		dialog.destroy()
 
 
 win = ConnectionManager() 
