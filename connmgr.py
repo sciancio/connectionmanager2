@@ -27,7 +27,7 @@ import json
 #   License along with this library; if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-VERSION='0.1'
+VERSION='0.2'
 
 # TreeStore object:
 # Type, Name, Host, Profile, Protocol
@@ -280,7 +280,7 @@ This involves loss of information, it is recommended to cancel it.")
 
 	
 		# About Label
-		label_about = Gtk.Label('<span size="30000">ConnectionManager 3</span>\n<span>Version: '+VERSION+'\n\nSimple GUI app for Gnome 3 that provides\n a menu for initiating SSH/Telnet connections.\n\nCopyright 2011 Stefano Ciancio</span>')
+		label_about = Gtk.Label('<span size="30000">ConnectionManager 3</span>\n<span>Version: '+VERSION+'\n\nSimple GUI app for Gnome 3 that provides\n a menu for initiating SSH/Telnet/Custom Apps connections.\n\nhttps://github.com/sciancio/connectionmanager\n\nCopyright 2011 Stefano Ciancio</span>')
 		label_about.set_justify(2)
 		label_about.set_use_markup(True)
 			          
