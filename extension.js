@@ -16,6 +16,9 @@
 //   License along with this library; if not, write to the Free Software
 //   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+
+// 12 December 2011 - Modified by Matthew Stokes to add support for opening in Tabbed
+// gnome-terminal
 const St = imports.gi.St;
 const Gdk = imports.gi.Gdk;
 const GLib = imports.gi.GLib;
@@ -140,11 +143,59 @@ ConnectionManager.prototype = {
 	},
 
 
+	_createCommandTab: function(child) {
+		//This creates a command that when combined with other commands for items in same folder
+		//Will open all items in a single tabbed gnome-terminal
+		let command = '';
+
+		if (child.Type == '__item__') {
+
+			//command += 'gnome-terminal';
+//			command += ' --tab --title='+ (child.Name).quote();
+			command += ' ';
+
+			let sshparams = child.Host.match(/^((?:\w+="(?:\\"|[^"])*" +)*)/g)[0];
+			let sshparams_noenv = child.Host.match(/^(?:\w+="(?:\\"|[^"])*" +)*(.*)$/)[1];
+
+			if (sshparams && sshparams.length > 0) {
+				command = sshparams + ' ' + command ;
+			}
+
+			if (child.Profile && child.Profile.length > 0) {
+				command += ' --tab-with-profile=' + (child.Profile).quote();
+			}
+			else 
+			{
+				command = ' --tab '; 
+			}
+
+			command += ' --title=' + (child.Name).quote();
+			command += ' -e ' + (child.Protocol + " " + sshparams_noenv).quote();
+
+			//command = 'sh -c ' + command.quote() + ' &';
+
+		}
+		
+		if (child.Type == '__app__') {
+	
+			if (child.Protocol == 'True') {
+				command += 'gnome-terminal --title=' + (child.Name).quote() + ' -e ';
+				command += (child.Host).quote();
+				command += ' &';
+			} else {
+				command += child.Host;
+			}
+
+		}
+
+		return command;
+	},
+
 	_readTree: function(node, parent, ident) {
 
 		let child, menuItem, menuSep, menuSub, icon, 
 			menuItemAll, iconAll, menuSepAll, ident_prec;
-		let childHasItem = false, commandAll = new Array(), itemnr = 0;
+		let childHasItem = false, commandAll = new Array(), commandTab = new Array(),itemnr = 0;
 
 		// For each child ... 
 		for (let i = 0; i < node.length; i++) {
@@ -161,6 +212,7 @@ ConnectionManager.prototype = {
 					menuItem.addActor(icon, { align: St.Align.END});
 
 					let command = this._createCommand(child);
+					let commandT = this._createCommandTab(child);
 					menuItem.connect('activate', function() {
 						Util.spawnCommandLine(command); 
 					});
@@ -168,6 +220,7 @@ ConnectionManager.prototype = {
 					
 					childHasItem = true;
 					commandAll[itemnr] = command;
+					commandTab[itemnr] = commandT;
 					itemnr++;
 					
 				}
@@ -194,6 +247,7 @@ ConnectionManager.prototype = {
 					
 					childHasItem = true;
 					commandAll[itemnr] = command;
+					commandTab[itemnr] = command;
 					itemnr++;
 					
 				}
@@ -221,20 +275,34 @@ ConnectionManager.prototype = {
 		
 		if (childHasItem) {
 			menuItemAll = new PopupMenu.PopupMenuItem(ident+"Open all windows");
+			menuItemTabs = new PopupMenu.PopupMenuItem(ident+"Open all as tabs");
 			iconAll = new St.Icon({icon_name: 'fileopen',
 							icon_type: St.IconType.FULLCOLOR,
 							style_class: 'connmgr-icon' });
 			menuItemAll.addActor(iconAll, { align: St.Align.END});
+			menuItemTabs.addActor(iconAll, { align: St.Align.END});
 
 			
 			menuSepAll = new PopupMenu.PopupSeparatorMenuItem();
 			parent.menu.addMenuItem(menuItemAll, 0);
-			parent.menu.addMenuItem(menuSepAll, 1);
+			parent.menu.addMenuItem(menuItemTabs, 1);
+			parent.menu.addMenuItem(menuSepAll, 2);
 			
 			menuItemAll.connect('activate', function() { 
 				for (let c = 0; c < commandAll.length; c++) {
 					Util.spawnCommandLine(commandAll[c]);
 				}
+			});
+			menuItemTabs.connect('activate', function() { 
+				//Generate command to open all commandTab items in a single tabbed gnome-terminal
+				let mycommand='';
+
+				for (let c = 0; c < commandTab.length; c++) {
+					mycommand += commandTab[c]+' ';
+
+				}
+
+					Util.spawnCommandLine('sh -c '+('gnome-terminal '+mycommand).quote()+' &');
 			});
 		}
 		
@@ -258,4 +326,3 @@ ConnectionManager.prototype = {
 function init(metadata) {
 	return new ConnectionManager(metadata);
 }
-
