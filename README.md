@@ -18,7 +18,7 @@ Some screenshot
 Why
 ========================
 
-Since moving to Fedora 15 and Gnome Shell, I’ve missed the `sshmenu <http://sshmenu.sourceforge.net/>` applet a lot. I have used it intensively and so I decided to rewrite it for Gnome 3.
+Since moving to Fedora 15 and Gnome Shell, I’ve missed the [sshmenu](http://sshmenu.sourceforge.net/) applet a lot. I have used it intensively and so I decided to rewrite it for Gnome 3.
 
 
 How to install
@@ -39,18 +39,19 @@ particular version of the GNOME Shell. If this does not fix
 the problem, use Looking Glass (Alt-F2 lg) to see what the
 error message is.
 
-You can also install from `Gnome Shell Extension site <https://extensions.gnome.org/extension/45/connection-manager/>`
+You can also install from [Gnome Shell Extension site](https://extensions.gnome.org/extension/45/connection-manager/)
 
 Other Info
 ========================
 
 You can find other info 
-  `here <https://github.com/sciancio/connectionmanager/wiki>`
-  `Gnome Shell Extension <https://extensions.gnome.org/extension/45/connection-manager/>`
-  `GitHub <https://github.com/sciancio/connectionmanager>`
-  `GitHub <wiki: https://github.com/sciancio/connectionmanager/wiki>`
 
-  `License <https://github.com/sciancio/connectionmanager/wiki/License>`
+* [here](https://github.com/sciancio/connectionmanager/wiki)
+* [Gnome Shell Extension](https://extensions.gnome.org/extension/45/connection-manager/)
+* [GitHub](https://github.com/sciancio/connectionmanager)
+* [GitHub wiki](https://github.com/sciancio/connectionmanager/wiki)
+
+* [License](https://github.com/sciancio/connectionmanager/wiki/License)
 
 
 
