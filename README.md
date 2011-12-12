@@ -44,13 +44,11 @@ You can also install from [Gnome Shell Extension site](https://extensions.gnome.
 Other Info
 ========================
 
-You can find other info 
+You can find other info: 
 
-* [here](https://github.com/sciancio/connectionmanager/wiki)
+* [GitHub wiki](https://github.com/sciancio/connectionmanager/wiki)
 * [Gnome Shell Extension](https://extensions.gnome.org/extension/45/connection-manager/)
 * [GitHub](https://github.com/sciancio/connectionmanager)
-* [GitHub wiki](https://github.com/sciancio/connectionmanager/wiki)
-
 * [License](https://github.com/sciancio/connectionmanager/wiki/License)
 
 

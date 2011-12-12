@@ -6,6 +6,7 @@ from StringIO import StringIO
 import gobject
 import gconf
 import os.path
+import shutil
 import json
 
 
@@ -27,12 +28,19 @@ import json
 #   License along with this library; if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-VERSION='0.2'
+VERSION='0.3'
 
 # TreeStore object:
 # Type, Name, Host, Profile, Protocol
 treestore = Gtk.TreeStore(str, str, str, str, str)
 Root = treestore.append(None, ['__folder__', 'Root', None, '', ''])
+
+# Global settings
+GlobalSettings = {}
+GlobalSettings['menu_open_tabs'] = True;
+GlobalSettings['menu_open_windows'] = True;
+GlobalSettings['backup_config_on_save'] = True;
+GlobalSettings['icon_on_topbar'] = True;
 
 
 # I/O class
@@ -45,10 +53,15 @@ class ConfIO(str):
 
 	# Decode JSON configuration
 	def custom_decode(self, dct, parent=Root):
+		global GlobalSettings
+
+		if 'Global' in dct:
+			for setting in dct['Global']:
+				GlobalSettings[setting] = (dct['Global'][setting] == "True");
 
 		if 'Root' in dct:
 			dct = dct['Root']
-		
+
 		for child in dct:
 			child = child[0]
 
@@ -123,10 +136,11 @@ class ConfIO(str):
 	# Read configuration
 	def read(self):
 		configuration = ""
-		if (os.path.exists(self.configuration_file) and 
+		if (os.path.exists(self.configuration_file) and \
 			os.path.isfile(self.configuration_file)):
 
 			in_file = open(self.configuration_file,"r")
+			
 			configuration = self.custom_decode(json.load(in_file))
 			in_file.close()
 		
@@ -138,11 +152,24 @@ class ConfIO(str):
 
 	# Write configuration
 	def write(self, treestore1):
-
+		global GlobalSettings
+		
 		self.json_output = ''
 		self.custom_encode(treestore1, Root)
-		self.json_output = '{"Root": ['+self.json_output+']}'
+		self.json_output = '{"Root": ['+self.json_output+'], \
+			"Global": { \
+				"menu_open_tabs": '+ json.dumps(str(GlobalSettings['menu_open_tabs'])) + ', \
+				"menu_open_windows": ' + json.dumps(str(GlobalSettings['menu_open_windows'])) + ', \
+				"backup_config_on_save": ' + json.dumps(str(GlobalSettings['backup_config_on_save'])) + ', \
+				"icon_on_topbar": ' + json.dumps(str(GlobalSettings['icon_on_topbar'])) + '} \
+		}'
 
+		# Make a copy backup before write
+		if GlobalSettings['backup_config_on_save'] and \
+				os.path.exists(self.configuration_file) and \
+				os.path.isfile(self.configuration_file):
+			shutil.copy(self.configuration_file, self.configuration_file+'.bak')
+		
 		out_file = open(self.configuration_file,"w")
 		json.dump(json.loads(self.json_output), out_file, indent=2)
 		out_file.close()
@@ -194,6 +221,8 @@ This involves loss of information, it is recommended to cancel it.")
 
 
 	def __init__(self):
+		global GlobalSettings
+		
 		Gtk.Window.__init__(self, title="ConnectionManager 3 - Preferences")
 
 		self.set_default_size(450, 400)
@@ -211,7 +240,6 @@ This involves loss of information, it is recommended to cancel it.")
 		self.treestore = self.configuration.read()
 
 		# ---------------------------------------------
-
 
 		# TreeView
 		self.tv.set_model(self.treestore)
@@ -273,25 +301,47 @@ This involves loss of information, it is recommended to cancel it.")
 		mybox.pack_start(scrolled_window, True, True, 6)
 		mybox.pack_start(SpecButtons, False, False, 6)
 	
-#		# Options Label
-#		options = Gtk.Label('<span size="20000">Under Construction</span>')
-#		options.set_justify(2)
-#		options.set_use_markup(True)
+		# Options Label
+		labelOpt = Gtk.Label('<span size="15000">Please, choose your configuration</span>')
+		labelOpt.set_justify(2)
+		labelOpt.set_use_markup(True)
+		checkOpt1 = Gtk.CheckButton('Include "Open all windows" selection')
+		checkOpt1.set_active(GlobalSettings['menu_open_windows'])
+		checkOpt1.connect("toggled", self.on_check_option_toggled, "menu_open_windows")
+		checkOpt2 = Gtk.CheckButton('Include "Open all as tabs" selection')
+		checkOpt2.set_active(GlobalSettings['menu_open_tabs'])
+		checkOpt2.connect("toggled", self.on_check_option_toggled, "menu_open_tabs")
+		checkOpt3 = Gtk.CheckButton('Backup configuration file on save')
+		checkOpt3.set_active(GlobalSettings['backup_config_on_save'])
+		checkOpt3.connect("toggled", self.on_check_option_toggled, "backup_config_on_save")
+		checkOpt4 = Gtk.CheckButton('Icon/Label (check/unckecked) on Top Bar (need logout/login)')
+		checkOpt4.set_active(GlobalSettings['icon_on_topbar'])
+		checkOpt4.connect("toggled", self.on_check_option_toggled, "icon_on_topbar")
 
+		options = Gtk.VBox(False, spacing=2)
+		options.pack_start(labelOpt, False, False, 10)
+		options.pack_start(checkOpt1, False, False, 0)
+		options.pack_start(checkOpt2, False, False, 0)
+		options.pack_start(checkOpt3, False, False, 0)
+		options.pack_start(checkOpt4, False, False, 10)
 	
 		# About Label
-		label_about = Gtk.Label('<span size="30000">ConnectionManager 3</span>\n<span>Version: '+VERSION+'\n\nSimple GUI app for Gnome 3 that provides\n a menu for initiating SSH/Telnet/Custom Apps connections.\n\nhttps://github.com/sciancio/connectionmanager\n\nCopyright 2011 Stefano Ciancio</span>')
+		about = Gtk.VBox(False, spacing=2)
+		label_about = Gtk.Label('<span size="30000">ConnectionManager 3</span>\n<span>Version: '+VERSION+'\n\nSimple GUI app for Gnome 3 that provides\n a menu for initiating SSH/Telnet/Custom Apps connections.\n\nCopyright 2011 Stefano Ciancio</span>')
 		label_about.set_justify(2)
 		label_about.set_use_markup(True)
-			          
+		button_about = Gtk.LinkButton("https://github.com/sciancio/connectionmanager", "Visit GitHub Project Homepage")
+		about.pack_start(label_about, False, False, 10)
+		about.pack_start(button_about, False, False, 10)
+
 		# Notebook
 		notebook = Gtk.Notebook()
 		notebook.set_tab_pos(2)
 		notebook.set_scrollable(True)
 
 		notebook.append_page(mybox, Gtk.Label("Hosts"))
-#		notebook.append_page(options, Gtk.Label("Options"))
-		notebook.append_page(label_about, Gtk.Label("About"))
+		notebook.append_page(options, Gtk.Label("Options"))
+		notebook.append_page(about, Gtk.Label("About"))
 		notebook.set_current_page(0)
 
 		# External Box
@@ -346,7 +396,12 @@ This involves loss of information, it is recommended to cancel it.")
 			if response == Gtk.ResponseType.OK:
 				dialog.destroy()
 				return True
-			
+
+	# Options
+	def on_check_option_toggled(self, button, name):
+		global GlobalSettings
+		GlobalSettings[name] = button.get_active()
+		self.set_conf_modified(True)
 
 	# Add Host
 	def on_click_me_addhost(self, button):
@@ -406,8 +461,9 @@ This involves loss of information, it is recommended to cancel it.")
 
 	# Save configuration
 	def on_click_me_saveconf(self, button):
-		self.configuration.write(self.treestore)
-		self.set_conf_modified(False)
+		if self.modified:
+			self.configuration.write(self.treestore)
+			self.set_conf_modified(False)
 
 	# Close
 	def on_click_me_close(self, button, event=None):
