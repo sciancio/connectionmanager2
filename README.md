@@ -10,11 +10,9 @@ What it looks like?
 
 Some screenshot
 
-.. image:: http://i.imgur.com/f5euB.png
-   :alt: CM extension
+![CM extension](http://i.imgur.com/f5euB.png)
 
-.. image:: http://i.imgur.com/yhN52.png
-   :alt: CM Preferences
+![CM Preferences](http://i.imgur.com/yhN52.png)
 
 
 Why
