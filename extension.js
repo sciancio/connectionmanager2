@@ -55,7 +55,7 @@ ConnectionManager.prototype = {
 
 		if (this._icon_on_topbar) {
 			// Icon
-			let icon_file = GLib.build_filenamev([metadata.path, "icons", "emblem-cm-symbolic.svg"]);
+			let icon_file = GLib.build_filenamev([metadata.path, "emblem-cm-symbolic.svg"]);
 			this._CMlogo = Gio.icon_new_for_string(icon_file);
 			this.setGIcon(this._CMlogo);
 			this.actor.set_size(40, 26);
@@ -108,7 +108,11 @@ ConnectionManager.prototype = {
 		
 		let menuPref = new PopupMenu.PopupMenuItem("Connection Manager Settings");
 		menuPref.connect('activate', Lang.bind(this, function() {
-			Util.spawnCommandLine('python2 ' + this._prefFile);
+			try {
+				Util.trySpawnCommandLine('python ' + this._prefFile);
+			} catch (e) {
+				Util.trySpawnCommandLine('python2 ' + this._prefFile);
+			}
 		}));
 		this.menu.addMenuItem(menuPref, this.menu.length+1);
 
