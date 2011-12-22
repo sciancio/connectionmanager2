@@ -10,9 +10,9 @@ What it looks like?
 
 Some screenshot
 
-![CM extension](http://i.imgur.com/f5euB.png)
+![CM extension](http://i.imgur.com/XHu3a.png)
 
-![CM Preferences](http://i.imgur.com/yhN52.png)
+![CM Preferences](http://i.imgur.com/R5XaX.png)
 
 
 Why
@@ -40,6 +40,11 @@ the problem, use Looking Glass (Alt-F2 lg) to see what the
 error message is.
 
 You can also install from [Gnome Shell Extension site](https://extensions.gnome.org/extension/45/connection-manager/)
+
+Current Version
+========================
+
+Release 0.4
 
 Other Info
 ========================

@@ -9,6 +9,9 @@ import os.path
 import shutil
 import json
 
+import itertools
+import re
+
 
 #   ConnectionManager 3 - Simple GUI app for Gnome 3 that provides a menu 
 #   for initiating SSH/Telnet/Custom Apps connections. 
@@ -28,7 +31,7 @@ import json
 #   License along with this library; if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-VERSION='0.3.1'
+VERSION='0.4'
 
 # TreeStore object:
 # Type, Name, Host, Profile, Protocol
@@ -275,8 +278,11 @@ This involves loss of information, it is recommended to cancel it.")
 		button5.connect("clicked", self.on_click_me_remove)
 		button6 = Gtk.Button("Save Conf")
 		button6.connect("clicked", self.on_click_me_saveconf)
-		button7 = Gtk.Button("Close")
-		button7.connect("clicked", self.on_click_me_close)
+		button7 = Gtk.Button("Import SSHConf")
+		button7.connect("clicked", self.on_click_me_importsshconf)
+
+		button8 = Gtk.Button("Close")
+		button8.connect("clicked", self.on_click_me_close)
 
 		# Specific Buttons
 		SpecButtons = Gtk.VButtonBox(spacing=6)
@@ -287,10 +293,11 @@ This involves loss of information, it is recommended to cancel it.")
 		SpecButtons.add(button4)
 		SpecButtons.add(button5)
 		SpecButtons.add(button6)
+		SpecButtons.add(button7)
 	
 		ExtButtons = Gtk.HButtonBox(margin_right=15, margin_bottom=6)
 		ExtButtons.set_layout(4)
-		ExtButtons.add(button7)
+		ExtButtons.add(button8)
 		# ButtonBox
 	
 		# UI design
@@ -494,7 +501,99 @@ This involves loss of information, it is recommended to cancel it.")
 		
 		else:
 			Gtk.main_quit()
+
+
+	def on_click_me_importsshconf(self, button):
+		imported_from_SSH_config_folder = '__Imported_from_SSH_config__'
+		model, current_iter = self.tv.get_selection().get_selected()
+
+		# Check if import folder already exists
+		if model.iter_has_child(Root):
+			iter = model.iter_children(Root)
+			
+			import_found = False
+			import_iter = ''
+			while (iter):
+				if (model.get_value(iter, 0) == '__folder__' and 
+						model.get_value(iter, 1) == imported_from_SSH_config_folder):
+					import_found = True
+					import_iter = iter
+
+				iter = model.iter_next(iter)
+			
+			if (import_found):
+
+				# User dialog
+				dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.ERROR,
+						Gtk.ButtonsType.YES_NO, "Imported folder content will be overwritten \nfrom a new ssh config import.\n\nConfirm?")
+				dialog.show_all()
+				response = dialog.run()
+				if response == Gtk.ResponseType.YES:
+					self.set_conf_modified(True)
+					dialog.destroy()
+
+				if response == Gtk.ResponseType.NO:
+					dialog.destroy()
+					return True
+				
+				# Remove imported folder
+				self.treestore.remove(import_iter)
+				
+				# Read and import ssh config
+				self.import_ssh_config(imported_from_SSH_config_folder);
+				
+			else:
+				self.set_conf_modified(True)
+				# Read and import ssh config
+				self.import_ssh_config(imported_from_SSH_config_folder);
+
+
+	def import_ssh_config(self, imported_from_SSH_config_folder):
+
+		SSH_CONFIG_FILE = os.getenv("HOME") + '/.ssh/config'
+
+		def get_value(line, key_arg):
+			m = re.search(r'^\s*%s\s+(.+)\s*$' % key_arg, line, re.I)
+			if m:
+				return m.group(1)
+			else:
+				return ''
+
+		def remove_comment(line):
+			return re.sub(r'#.*$', '', line)
+
+		def not_a_host(line):
+			return get_value(line, 'Host') == ''
+
+		def a_host(line):
+			return get_value(line, 'Host') != ''
+
+		import_iter = treestore.append(Root, ['__folder__', 
+					imported_from_SSH_config_folder, None, None, None])
+
+		lines = [line.strip() for line in file(SSH_CONFIG_FILE)]
+		comments_removed = [remove_comment(line) for line in lines]
+		blanks_removed = [line for line in comments_removed if line]
+
+		block = itertools.groupby(blanks_removed, not_a_host)
+
+		first_block = False
+		for key,group in block:
+			Info = dict([line.split(None, 1) for line in group])
+
+			print Info
+			
+			if (not key):
+				if (not first_block): first_block = True
+				importedHost = Info['Host']
+			if (key and first_block):
+				if 'HostName' in Info : importedHostname = Info['HostName']
+				if 'User' in Info : importedHostname = Info['User']+'@'+importedHostname
 		
+				if importedHost != '*':
+					treestore.append(import_iter, ['__item__', 
+						importedHost, importedHostname, 'Default', 'ssh'])
+
 
 
 	def is_folder(self, iter):

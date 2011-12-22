@@ -68,19 +68,16 @@ ConnectionManager.prototype = {
 		}
 
 
-//		// Update every 1 minute
-//		GLib.timeout_add(0, 60000, Lang.bind(this, 
-//			function () {
-//				this._readConf();
-//				return true;
-//			}));
+		let file = Gio.file_new_for_path(this._configFile);
+		this.monitor = file.monitor(Gio.FileMonitorFlags.NONE, null);
+		this.monitor.connect('changed', Lang.bind(this, this._readConf));
 
 	},
 
 	_readConf: function () {
 
 		this.menu.removeAll();
-		
+
 		if (GLib.file_test(this._configFile, GLib.FileTest.EXISTS) ) {
 
 			let filedata = GLib.file_get_contents(this._configFile, null, 0);
@@ -115,10 +112,6 @@ ConnectionManager.prototype = {
 			}
 		}));
 		this.menu.addMenuItem(menuPref, this.menu.length+1);
-
-		let menuReload = new PopupMenu.PopupMenuItem("Configuration Reload");
-		menuReload.connect('activate', Lang.bind(this, function() { this._readConf(); } ));
-		this.menu.addMenuItem(menuReload, this.menu.length+2);
 
 	},
 
@@ -203,7 +196,7 @@ ConnectionManager.prototype = {
 	_readTree: function(node, parent, ident) {
 
 		let child, menuItem, menuSep, menuSub, icon, 
-			menuItemAll, iconAll, menuSepAll, ident_prec;
+			menuItemAll, iconAll, menuSepAll, menuItemTabs, iconTabs, ident_prec;
 		let childHasItem = false, commandAll = new Array(), commandTab = new Array(), 
 			sshparamsTab = new Array(), itemnr = 0;
 
