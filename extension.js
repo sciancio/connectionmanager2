@@ -67,11 +67,6 @@ ConnectionManager.prototype = {
 			this.actor.add_actor(label);
 		}
 
-
-		let file = Gio.file_new_for_path(this._configFile);
-		this.monitor = file.monitor(Gio.FileMonitorFlags.NONE, null);
-		this.monitor.connect('changed', Lang.bind(this, this._readConf));
-
 	},
 
 	_readConf: function () {
@@ -330,11 +325,18 @@ ConnectionManager.prototype = {
 		let _children = Main.panel._rightBox.get_children();
 		Main.panel._rightBox.insert_actor(this.actor, _children.length - 2);
 		Main.panel._menus.addMenu(this.menu);
+
+		let file = Gio.file_new_for_path(this._configFile);
+		this.monitor = file.monitor(Gio.FileMonitorFlags.NONE, null);
+		this.monitor.connect('changed', Lang.bind(this, this._readConf));
+
 	},
 	
 	disable: function() {
 		Main.panel._menus.removeMenu(this.menu);
 		Main.panel._rightBox.remove_actor(this.actor);
+		
+		delete this.monitor;
 	},
 
 };
