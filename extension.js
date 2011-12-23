@@ -336,7 +336,7 @@ ConnectionManager.prototype = {
 		Main.panel._menus.removeMenu(this.menu);
 		Main.panel._rightBox.remove_actor(this.actor);
 		
-		delete this.monitor;
+		this.monitor.cancel();
 	},
 
 };
