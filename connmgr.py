@@ -31,20 +31,18 @@ import re
 #   License along with this library; if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-VERSION='0.4'
+VERSION='0.5'
 
 # TreeStore object:
 # Type, Name, Host, Profile, Protocol
 treestore = Gtk.TreeStore(str, str, str, str, str)
-Root = treestore.append(None, ['__folder__', 'Root', None, '', ''])
+Root = treestore.append(None, ['__folder__', 'Root', "", "", ""])
 
 # Global settings
 GlobalSettings = {}
 GlobalSettings['menu_open_tabs'] = True;
 GlobalSettings['menu_open_windows'] = True;
-GlobalSettings['backup_config_on_save'] = True;
-GlobalSettings['icon_on_topbar'] = True;
-
+GlobalSettings['terminator_as_terminal'] = False;
 
 # I/O class
 class ConfIO(str):
@@ -77,7 +75,7 @@ class ConfIO(str):
 			if child['Type'] == '__folder__' :
 				parent_prec = parent
 				parent = treestore.append(parent, ['__folder__', 
-							child['Name'], None, None, None])
+							child['Name'], "", "", ""])
 				self.custom_decode(child['Children'], parent)
 				parent = parent_prec
 
@@ -163,13 +161,11 @@ class ConfIO(str):
 			"Global": { \
 				"menu_open_tabs": '+ json.dumps(str(GlobalSettings['menu_open_tabs'])) + ', \
 				"menu_open_windows": ' + json.dumps(str(GlobalSettings['menu_open_windows'])) + ', \
-				"backup_config_on_save": ' + json.dumps(str(GlobalSettings['backup_config_on_save'])) + ', \
-				"icon_on_topbar": ' + json.dumps(str(GlobalSettings['icon_on_topbar'])) + '} \
+				"terminator_as_terminal": ' + json.dumps(str(GlobalSettings['terminator_as_terminal'])) + '} \
 		}'
 
 		# Make a copy backup before write
-		if GlobalSettings['backup_config_on_save'] and \
-				os.path.exists(self.configuration_file) and \
+		if os.path.exists(self.configuration_file) and \
 				os.path.isfile(self.configuration_file):
 			shutil.copy(self.configuration_file, self.configuration_file+'.bak')
 		
@@ -318,19 +314,15 @@ This involves loss of information, it is recommended to cancel it.")
 		checkOpt2 = Gtk.CheckButton('Include "Open all as tabs" selection')
 		checkOpt2.set_active(GlobalSettings['menu_open_tabs'])
 		checkOpt2.connect("toggled", self.on_check_option_toggled, "menu_open_tabs")
-		checkOpt3 = Gtk.CheckButton('Backup configuration file on save')
-		checkOpt3.set_active(GlobalSettings['backup_config_on_save'])
-		checkOpt3.connect("toggled", self.on_check_option_toggled, "backup_config_on_save")
-		checkOpt4 = Gtk.CheckButton('Icon/Label (check/unckecked) on Top Bar (need logout/login)')
-		checkOpt4.set_active(GlobalSettings['icon_on_topbar'])
-		checkOpt4.connect("toggled", self.on_check_option_toggled, "icon_on_topbar")
+		checkOpt3 = Gtk.CheckButton('Use "Terminator" as terminal (it must be installed)')
+		checkOpt3.set_active(GlobalSettings['terminator_as_terminal'])
+		checkOpt3.connect("toggled", self.on_check_option_toggled, "terminator_as_terminal")
 
 		options = Gtk.VBox(False, spacing=2)
 		options.pack_start(labelOpt, False, False, 10)
 		options.pack_start(checkOpt1, False, False, 0)
 		options.pack_start(checkOpt2, False, False, 0)
 		options.pack_start(checkOpt3, False, False, 0)
-		options.pack_start(checkOpt4, False, False, 10)
 	
 		# About Label
 		about = Gtk.VBox(False, spacing=2)
@@ -569,7 +561,7 @@ This involves loss of information, it is recommended to cancel it.")
 			return get_value(line, 'Host') != ''
 
 		import_iter = treestore.append(Root, ['__folder__', 
-					imported_from_SSH_config_folder, None, None, None])
+					imported_from_SSH_config_folder, "", "", ""])
 
 		lines = [line.strip() for line in file(SSH_CONFIG_FILE)]
 		comments_removed = [remove_comment(line) for line in lines]

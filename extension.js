@@ -53,19 +53,11 @@ ConnectionManager.prototype = {
 
 		this._readConf();
 
-		if (this._icon_on_topbar) {
-			// Icon
-			let icon_file = GLib.build_filenamev([metadata.path, "emblem-cm-symbolic.svg"]);
-			this._CMlogo = Gio.icon_new_for_string(icon_file);
-			this.setGIcon(this._CMlogo);
-			this.actor.set_size(40, 26);
-
-		} else {
-			// Label CM
-			let label = new St.Label({ text: _("CM") });
-			this.actor.get_children().forEach(function(c) { c.destroy() });
-			this.actor.add_actor(label);
-		}
+		// Icon
+		let icon_file = GLib.build_filenamev([metadata.path, "emblem-cm-symbolic.svg"]);
+		this._CMlogo = Gio.icon_new_for_string(icon_file);
+		this.setGIcon(this._CMlogo);
+		this.actor.set_size(40, 26);
 
 	},
 
@@ -86,8 +78,8 @@ ConnectionManager.prototype = {
 
 			this._menu_open_tabs = !(/^False$/i.test(jsondata.Global.menu_open_tabs));
 			this._menu_open_windows = !(/^False$/i.test(jsondata.Global.menu_open_windows));
-			this._icon_on_topbar = !(/^False$/i.test(jsondata.Global.icon_on_topbar));
-			
+			this._terminator_as_terminal = (/^True$/i.test(jsondata.Global.terminator_as_terminal));
+
 			this._readTree(root, this, "");
 
 		} else {
@@ -111,6 +103,7 @@ ConnectionManager.prototype = {
 	},
 
 
+	// This creates a command for each item using gnome-terminal
 	_createCommand: function(child) {
 
 		let command = '';
@@ -142,11 +135,49 @@ ConnectionManager.prototype = {
 			if (child.Protocol == 'True') {
 				command += 'gnome-terminal --title=' + (child.Name).quote() + ' -e ';
 				command += (child.Host).quote();
-				command += ' &';
 			} else {
 				command += child.Host;
 			}
+		}
 
+		return command;
+	},
+
+	// This creates a command for each item using terminator (it must be installed)
+	_createCommandTerminator: function(child) {
+
+		let command = '';
+
+		if (child.Type == '__item__') {
+
+			command += 'terminator';
+
+			let sshparams = child.Host.match(/^((?:\w+="(?:\\"|[^"])*" +)*)/g)[0];
+			let sshparams_noenv = child.Host.match(/^(?:\w+="(?:\\"|[^"])*" +)*(.*)$/)[1];
+
+			if (sshparams && sshparams.length > 0) {
+				command = sshparams + ' ' + command;
+			}
+
+			if (child.Profile && child.Profile.length > 0) {
+				command += ' --profile=' + (child.Profile).quote();
+			}
+
+			command += ' --title=' + (child.Name).quote();
+			command += ' -e ' + ("sh -c " + (child.Protocol + " " + sshparams_noenv).quote()).quote();
+
+			command = 'sh -c ' + command.quote();
+
+		}
+		
+		if (child.Type == '__app__') {
+	
+			if (child.Protocol == 'True') {
+				command += 'terminator --title=' + (child.Name).quote() + ' -e ';
+				command += (child.Host).quote();
+			} else {
+				command += child.Host;
+			}
 		}
 
 		return command;
@@ -198,6 +229,7 @@ ConnectionManager.prototype = {
 		// For each child ... 
 		for (let i = 0; i < node.length; i++) {
 			child = node[i][0];
+			let command;
 
 			if (child.hasOwnProperty('Type')) {
 
@@ -209,7 +241,11 @@ ConnectionManager.prototype = {
 							style_class: 'connmgr-icon' });
 					menuItem.addActor(icon, { align: St.Align.END});
 
-					let command = this._createCommand(child);
+					if (this._terminator_as_terminal) {
+						command = this._createCommandTerminator(child);
+					} else {
+						command = this._createCommand(child);
+					}
 					let [commandT, sshparamsT] = this._createCommandTab(child);
 					menuItem.connect('activate', function() {
 						Util.spawnCommandLine(command); 
@@ -233,17 +269,15 @@ ConnectionManager.prototype = {
 							style_class: 'connmgr-icon' });
 					menuItem.addActor(icon, { align: St.Align.END});
 
-					let command = this._createCommand(child);
-					let [commandT, sshparamsT] = this._createCommandTab(child);
-					if (child.Protocol == 'True') {
-						menuItem.connect('activate', function() {
-							Util.spawnCommandLine(command); 
-						});
+					if (this._terminator_as_terminal) {
+						command = this._createCommandTerminator(child);
 					} else {
-						menuItem.connect('activate', function() {
-							Util.spawn(command.split(" "));
-						});
+						command = this._createCommand(child);
 					}
+					let [commandT, sshparamsT] = this._createCommandTab(child);
+					menuItem.connect('activate', function() {
+						Util.spawnCommandLine(command); 
+					});
 					parent.menu.addMenuItem(menuItem, i);
 
 					childHasItem = true;
@@ -294,7 +328,7 @@ ConnectionManager.prototype = {
 				});
 			}
 
-			if (this._menu_open_tabs) {
+			if ( (this._menu_open_tabs) && (!this._terminator_as_terminal) ) {
 				menuItemTabs = new PopupMenu.PopupMenuItem(ident+"Open all as tabs");
 				iconTabs = new St.Icon({icon_name: 'fileopen',
 								icon_type: St.IconType.FULLCOLOR,
@@ -345,3 +379,4 @@ ConnectionManager.prototype = {
 function init(metadata) {
 	return new ConnectionManager(metadata);
 }
+
