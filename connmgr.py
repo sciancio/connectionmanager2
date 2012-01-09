@@ -83,20 +83,20 @@ class ConfIO(str):
 
 
 	def get_item(self, t, iter):
-		return '[{"Type":'+json.dumps(str(t.get_value(iter, 0)))+','+ \
-		'"Name":'+json.dumps(str(t.get_value(iter, 1)))+','+ \
-		'"Host":'+json.dumps(str(t.get_value(iter, 2)))+','+ \
-		'"Profile":'+json.dumps(str(t.get_value(iter, 3)))+','+ \
-		'"Protocol":'+json.dumps(str(t.get_value(iter, 4)))+','+ \
+		return '[{"Type":'+json.dumps(repr(t.get_value(iter, 0)))+','+ \
+		'"Name":'+json.dumps(repr(t.get_value(iter, 1)))+','+ \
+		'"Host":'+json.dumps(repr(t.get_value(iter, 2)))+','+ \
+		'"Profile":'+json.dumps(repr(t.get_value(iter, 3)))+','+ \
+		'"Protocol":'+json.dumps(repr(t.get_value(iter, 4)))+','+ \
 		'"Children":[]' \
 		'}]'
 
 	def get_folder(self, t, iter):
-		return '"Type":'+json.dumps(str(t.get_value(iter, 0)))+','+ \
-		'"Name":'+json.dumps(str(t.get_value(iter, 1)))+','+ \
-		'"Host":'+json.dumps(str(t.get_value(iter, 2)))+','+ \
-		'"Profile":'+json.dumps(str(t.get_value(iter, 3)))+','+ \
-		'"Protocol":'+json.dumps(str(t.get_value(iter, 4)))+','+ \
+		return '"Type":'+json.dumps(repr(t.get_value(iter, 0)))+','+ \
+		'"Name":'+json.dumps(repr(t.get_value(iter, 1)))+','+ \
+		'"Host":'+json.dumps(repr(t.get_value(iter, 2)))+','+ \
+		'"Profile":'+json.dumps(repr(t.get_value(iter, 3)))+','+ \
+		'"Protocol":'+json.dumps(repr(t.get_value(iter, 4)))+','+ \
 		'"Children":'
 
 
@@ -159,9 +159,9 @@ class ConfIO(str):
 		self.custom_encode(treestore1, Root)
 		self.json_output = '{"Root": ['+self.json_output+'], \
 			"Global": { \
-				"menu_open_tabs": '+ json.dumps(str(GlobalSettings['menu_open_tabs'])) + ', \
-				"menu_open_windows": ' + json.dumps(str(GlobalSettings['menu_open_windows'])) + ', \
-				"terminator_as_terminal": ' + json.dumps(str(GlobalSettings['terminator_as_terminal'])) + '} \
+				"menu_open_tabs": '+ json.dumps(repr(GlobalSettings['menu_open_tabs'])) + ', \
+				"menu_open_windows": ' + json.dumps(repr(GlobalSettings['menu_open_windows'])) + ', \
+				"terminator_as_terminal": ' + json.dumps(repr(GlobalSettings['terminator_as_terminal'])) + '} \
 		}'
 
 		# Make a copy backup before write
@@ -752,7 +752,7 @@ This involves loss of information, it is recommended to cancel it.")
 
 				if row[0] == '__app__':
 					newrow = [row[0], entry1.get_text(), entry5.get_text(), 
-						row[3], str(check7.get_active())]
+						row[3], repr(check7.get_active())]
 					if entry1.get_text() != '' and entry5.get_text() != '':
 						dialog.destroy()
 						return True, newrow
@@ -784,11 +784,11 @@ This involves loss of information, it is recommended to cancel it.")
 				return
 
 
-			currentrow = [str(model.get_value(current_iter, 0)), 
-				str(model.get_value(current_iter, 1)),
-				str(model.get_value(current_iter, 2)),
-				str(model.get_value(current_iter, 3)),
-				str(model.get_value(current_iter, 4))]
+			currentrow = [repr(model.get_value(current_iter, 0)), 
+				repr(model.get_value(current_iter, 1)),
+				repr(model.get_value(current_iter, 2)),
+				repr(model.get_value(current_iter, 3)),
+				repr(model.get_value(current_iter, 4))]
 		
 			response, newrow = self.item_dialog(currentrow)
 		
