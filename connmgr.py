@@ -11,6 +11,7 @@ import json
 
 import itertools
 import re
+import sys
 
 
 #   ConnectionManager 3 - Simple GUI app for Gnome 3 that provides a menu 
@@ -31,7 +32,7 @@ import re
 #   License along with this library; if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-VERSION='0.5'
+VERSION='0.5.1'
 
 # TreeStore object:
 # Type, Name, Host, Profile, Protocol
@@ -83,20 +84,20 @@ class ConfIO(str):
 
 
 	def get_item(self, t, iter):
-		return '[{"Type":'+json.dumps(str(t.get_value(iter, 0)))+','+ \
-		'"Name":'+json.dumps(str(t.get_value(iter, 1)))+','+ \
-		'"Host":'+json.dumps(str(t.get_value(iter, 2)))+','+ \
-		'"Profile":'+json.dumps(str(t.get_value(iter, 3)))+','+ \
-		'"Protocol":'+json.dumps(str(t.get_value(iter, 4)))+','+ \
+		return '[{"Type":'+json.dumps(t.get_value(iter, 0))+','+ \
+		'"Name":'+json.dumps(t.get_value(iter, 1))+','+ \
+		'"Host":'+json.dumps(t.get_value(iter, 2))+','+ \
+		'"Profile":'+json.dumps(t.get_value(iter, 3))+','+ \
+		'"Protocol":'+json.dumps(t.get_value(iter, 4))+','+ \
 		'"Children":[]' \
 		'}]'
 
 	def get_folder(self, t, iter):
-		return '"Type":'+json.dumps(str(t.get_value(iter, 0)))+','+ \
-		'"Name":'+json.dumps(str(t.get_value(iter, 1)))+','+ \
-		'"Host":'+json.dumps(str(t.get_value(iter, 2)))+','+ \
-		'"Profile":'+json.dumps(str(t.get_value(iter, 3)))+','+ \
-		'"Protocol":'+json.dumps(str(t.get_value(iter, 4)))+','+ \
+		return '"Type":'+json.dumps(t.get_value(iter, 0))+','+ \
+		'"Name":'+json.dumps(t.get_value(iter, 1))+','+ \
+		'"Host":'+json.dumps(t.get_value(iter, 2))+','+ \
+		'"Profile":'+json.dumps(t.get_value(iter, 3))+','+ \
+		'"Protocol":'+json.dumps(t.get_value(iter, 4))+','+ \
 		'"Children":'
 
 
@@ -159,16 +160,11 @@ class ConfIO(str):
 		self.custom_encode(treestore1, Root)
 		self.json_output = '{"Root": ['+self.json_output+'], \
 			"Global": { \
-				"menu_open_tabs": '+ json.dumps(str(GlobalSettings['menu_open_tabs'])) + ', \
-				"menu_open_windows": ' + json.dumps(str(GlobalSettings['menu_open_windows'])) + ', \
-				"terminator_as_terminal": ' + json.dumps(str(GlobalSettings['terminator_as_terminal'])) + '} \
+				"menu_open_tabs": '+ json.dumps((GlobalSettings['menu_open_tabs'])) + ', \
+				"menu_open_windows": ' + json.dumps((GlobalSettings['menu_open_windows'])) + ', \
+				"terminator_as_terminal": ' + json.dumps((GlobalSettings['terminator_as_terminal'])) + '} \
 		}'
 
-		# Make a copy backup before write
-		if os.path.exists(self.configuration_file) and \
-				os.path.isfile(self.configuration_file):
-			shutil.copy(self.configuration_file, self.configuration_file+'.bak')
-		
 		out_file = open(self.configuration_file,"w")
 		json.dump(json.loads(self.json_output), out_file, indent=2)
 		out_file.close()
@@ -177,9 +173,7 @@ class ConfIO(str):
 # Main class
 class ConnectionManager(Gtk.Window):
 
-	modified = False
-	status_conf = Gtk.Label('<span size="10000" color="green">Configuration saved</span>')
-	status_conf.set_use_markup(True)
+	first_time_changes = True;
 
 	tv = Gtk.TreeView()
 	bad_path = None
@@ -214,7 +208,7 @@ This involves loss of information, it is recommended to cancel it.")
 
 	def drag_drop_cb(self, treeview, dragcontext, x, y, time):
 		gobject.timeout_add(50, self.checkValidity)
-		self.set_conf_modified(True)
+		self.conf_modified()
 
 	## ------------------------------------------------------
 
@@ -232,8 +226,8 @@ This involves loss of information, it is recommended to cancel it.")
 		self.treestore = Gtk.TreeStore(str, str, str, str)
 		# ---------------------------------------------	
 
-		conf_file = os.getenv("HOME") + "/.connmgr"
-		self.configuration = ConfIO(conf_file)
+		self.conf_file = os.getenv("HOME") + "/.connmgr"
+		self.configuration = ConfIO(self.conf_file)
 
 		# Read Configuration
 		self.treestore = self.configuration.read()
@@ -272,13 +266,11 @@ This involves loss of information, it is recommended to cancel it.")
 		button4.connect("clicked", self.on_click_me_addmenu)
 		button5 = Gtk.Button("Remove")
 		button5.connect("clicked", self.on_click_me_remove)
-		button6 = Gtk.Button("Save Conf")
-		button6.connect("clicked", self.on_click_me_saveconf)
-		button7 = Gtk.Button("Import SSHConf")
-		button7.connect("clicked", self.on_click_me_importsshconf)
+		button6 = Gtk.Button("Import SSHConf")
+		button6.connect("clicked", self.on_click_me_importsshconf)
 
-		button8 = Gtk.Button("Close")
-		button8.connect("clicked", self.on_click_me_close)
+		button7 = Gtk.Button("Close")
+		button7.connect("clicked", self.on_click_me_close)
 
 		# Specific Buttons
 		SpecButtons = Gtk.VButtonBox(spacing=6)
@@ -289,11 +281,10 @@ This involves loss of information, it is recommended to cancel it.")
 		SpecButtons.add(button4)
 		SpecButtons.add(button5)
 		SpecButtons.add(button6)
-		SpecButtons.add(button7)
 	
 		ExtButtons = Gtk.HButtonBox(margin_right=15, margin_bottom=6)
 		ExtButtons.set_layout(4)
-		ExtButtons.add(button8)
+		ExtButtons.add(button7)
 		# ButtonBox
 	
 		# UI design
@@ -346,19 +337,24 @@ This involves loss of information, it is recommended to cancel it.")
 		# External Box
 		ExtBox = Gtk.VBox()
 		ExtBox.pack_start(notebook, True, True, 0)
-		ExtBox.pack_start(self.status_conf, False, False, 0)
 		ExtBox.pack_end(ExtButtons, False, False, 0)
 
 		self.add(ExtBox)
 
-	def set_conf_modified(self, status):
-		self.modified = status
-		if self.modified:
-			self.status_conf.set_text('<span size="10000" color="red">Configuration unsaved</span>')
-		else:
-			self.status_conf.set_text('<span size="10000" color="green">Configuration saved</span>')
-		self.status_conf.set_use_markup(True)
-		self.status_conf.set_justify(Gtk.Justification.LEFT)
+
+	def conf_modified(self):
+
+		if self.first_time_changes:
+
+			# Make a copy backup before write
+			if os.path.exists(self.conf_file) and \
+					os.path.isfile(self.conf_file):
+				shutil.copy(self.conf_file, self.conf_file+'.bak')
+
+			self.first_time_changes = False;
+
+		# Save configuratione every time
+		self.configuration.write(self.treestore)
 
 
 	# Add Element (item, separator, folder)
@@ -372,20 +368,20 @@ This involves loss of information, it is recommended to cancel it.")
 					response, row = self.item_dialog(newrow)
 					if response:
 						new_iter = self.treestore.insert_after(current_iter, None, row)
-						self.set_conf_modified(True)
+						self.conf_modified()
 				if newrow[0] == '__sep__':
 						new_iter = self.treestore.insert_after(current_iter, None, newrow)
-						self.set_conf_modified(True)
+						self.conf_modified()
 
 			if self.is_item(current_iter) or self.is_app(current_iter) or self.is_sep(current_iter):
 				if newrow[0] == '__folder__' or newrow[0] == '__item__' or newrow[0] == '__app__':
 					response, row = self.item_dialog(newrow)
 					if response:
 						new_iter = self.treestore.insert_after(None, current_iter, row)
-						self.set_conf_modified(True)
+						self.conf_modified()
 				if newrow[0] == '__sep__':
 					new_iter = self.treestore.insert_after(None, current_iter, newrow)
-					self.set_conf_modified(True)
+					self.conf_modified()
 
 		else:
 			dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.ERROR,
@@ -400,7 +396,7 @@ This involves loss of information, it is recommended to cancel it.")
 	def on_check_option_toggled(self, button, name):
 		global GlobalSettings
 		GlobalSettings[name] = button.get_active()
-		self.set_conf_modified(True)
+		self.conf_modified()
 
 	# Add Host
 	def on_click_me_addhost(self, button):
@@ -439,13 +435,13 @@ This involves loss of information, it is recommended to cancel it.")
 				response = dialog.run()
 				if response == Gtk.ResponseType.YES:
 					self.treestore.remove(current_iter)
-					self.set_conf_modified(True)
+					self.conf_modified()
 
 				dialog.destroy()
 			
 			else:
 				self.treestore.remove(current_iter)
-				self.set_conf_modified(True)
+				self.conf_modified()
 				
 		else: 
 			dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.ERROR,
@@ -457,42 +453,9 @@ This involves loss of information, it is recommended to cancel it.")
 				return True
 
 
-
-	# Save configuration
-	def on_click_me_saveconf(self, button):
-		if self.modified:
-			self.configuration.write(self.treestore)
-			self.set_conf_modified(False)
-
 	# Close
 	def on_click_me_close(self, button, event=None):
-
-		if self.modified:
-
-			dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.WARNING,
-			Gtk.ButtonsType.NONE, "Save changes to configuration before closing?")
-			dialog.format_secondary_text(
-			"If you don't save, changes will be permanently lost.")
-
-			dialog.add_button("Close without Saving", Gtk.ResponseType.CLOSE)
-			dialog.add_button("Cancel", Gtk.ResponseType.CANCEL)
-			dialog.add_button("Save&Close", Gtk.ResponseType.OK)
-			response = dialog.run()
-			if response == Gtk.ResponseType.OK:
-				self.configuration.write(self.treestore)
-				Gtk.main_quit()
-
-			elif response == Gtk.ResponseType.CANCEL:
-				dialog.destroy()
-				return True
-			
-			elif response == Gtk.ResponseType.CLOSE:
-				Gtk.main_quit()
-
-			dialog.destroy()
-		
-		else:
-			Gtk.main_quit()
+		Gtk.main_quit()
 
 
 	def on_click_me_importsshconf(self, button):
@@ -521,7 +484,7 @@ This involves loss of information, it is recommended to cancel it.")
 				dialog.show_all()
 				response = dialog.run()
 				if response == Gtk.ResponseType.YES:
-					self.set_conf_modified(True)
+					self.conf_modified()
 					dialog.destroy()
 
 				if response == Gtk.ResponseType.NO:
@@ -535,7 +498,7 @@ This involves loss of information, it is recommended to cancel it.")
 				self.import_ssh_config(imported_from_SSH_config_folder);
 				
 			else:
-				self.set_conf_modified(True)
+				self.conf_modified()
 				# Read and import ssh config
 				self.import_ssh_config(imported_from_SSH_config_folder);
 
@@ -650,7 +613,7 @@ This involves loss of information, it is recommended to cancel it.")
 		for index, item in enumerate(names):
 			profile = client.get_string(GnomeTermProfName.replace('%s', item))
 			entry3.append_text(profile)
-			if profile == row[3]:
+			if profile.decode('utf-8') == row[3]:
 				entry3.set_active(index)
 		
 		entry3.set_entry_text_column(0)
@@ -739,12 +702,12 @@ This involves loss of information, it is recommended to cancel it.")
 				if row[0] == '__item__':
 					newrow = [row[0], entry1.get_text(), entry2.get_text(), 
 						entry3.get_active_text(), entry4.get_active_text()]
-					if entry1.get_text() != '' and entry2.get_text() != '':
+					if entry1.get_text() != '' and entry2.get_text() != '' and entry3.get_active_text() != None:
 						dialog.destroy()
 						return True, newrow
 					else:
 						edialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.ERROR,
-							Gtk.ButtonsType.OK, "You must enter a title/host")
+							Gtk.ButtonsType.OK, "You must enter a title/host/profile")
 						edialog.show_all()
 						eresponse = edialog.run()
 						if eresponse == Gtk.ResponseType.OK:
@@ -784,11 +747,11 @@ This involves loss of information, it is recommended to cancel it.")
 				return
 
 
-			currentrow = [str(model.get_value(current_iter, 0)), 
-				str(model.get_value(current_iter, 1)),
-				str(model.get_value(current_iter, 2)),
-				str(model.get_value(current_iter, 3)),
-				str(model.get_value(current_iter, 4))]
+			currentrow = [(model.get_value(current_iter, 0)), 
+				(model.get_value(current_iter, 1)),
+				(model.get_value(current_iter, 2)),
+				(model.get_value(current_iter, 3)),
+				(model.get_value(current_iter, 4))]
 		
 			response, newrow = self.item_dialog(currentrow)
 		
@@ -797,7 +760,7 @@ This involves loss of information, it is recommended to cancel it.")
 				model.set_value(current_iter, 2, newrow[2])
 				model.set_value(current_iter, 3, newrow[3])
 				model.set_value(current_iter, 4, newrow[4])
-				self.set_conf_modified(True)
+				self.conf_modified()
 
 			return True
 
