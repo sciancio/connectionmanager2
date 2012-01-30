@@ -23,6 +23,7 @@ const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;
 const Lang = imports.lang;
 const Shell = imports.gi.Shell;
+const Search = imports.ui.search;
 
 const Mainloop = imports.mainloop;
 const Signals = imports.signals;
@@ -36,6 +37,98 @@ const Util = imports.misc.util;
 const Gettext = imports.gettext.domain('gnome-shell-extensions');
 const _ = Gettext.gettext;
 
+const GNOME_TERMINAL_APP = 'gnome-terminal';
+const TERMINATOR_APP = 'terminator';
+
+
+// SSH / Apps Search Provider
+function SshSearchProvider() {
+	this._init();
+}
+
+SshSearchProvider.prototype = {
+	__proto__: Search.SearchProvider.prototype,
+
+	_init: function() {
+		Search.SearchProvider.prototype._init.call(this, "CONNECTION MANAGER");
+		this.sshNames = [];
+	},
+	
+	// Update list of SSH/Apps on configuration changes
+	_update: function (sshNames) {
+		this.sshNames = sshNames;
+	},
+
+	getResultMeta: function(resultId) {
+	
+		let appSys = Shell.AppSystem.get_default();
+		let app = appSys.lookup_app('gnome-session-properties.desktop');
+
+		switch (resultId.type) {
+		case '__app__':
+			app = appSys.lookup_app('gnome-session-properties.desktop');
+			break;
+		case '__item__':
+			if (resultId.terminal) {
+				app = appSys.lookup_app(TERMINATOR_APP + '.desktop');
+			} else {
+				app = appSys.lookup_app(GNOME_TERMINAL_APP + '.desktop');
+			}
+			break;
+		}
+
+		let ssh_name = resultId.name;
+
+		return {'id': resultId,
+				'name': ssh_name,
+				'createIcon': function(size) {
+								return app.create_icon_texture(size);
+							  }
+		};
+	},
+
+	activateResult: function(id) {
+		Util.spawnCommandLine(id.command);
+	},
+	
+	getInitialResultSet: function(terms) {
+		// check if a found host-name begins like the search-term
+		let searchResults = [];
+
+		for (var i=0; i<this.sshNames.length; i++) {
+			for (var j=0; j<terms.length; j++) {
+				try {
+					let pattern = new RegExp(terms[j],"gi");
+					if (this.sshNames[i][2].match(pattern)) {
+
+						searchResults.push({
+								'type': this.sshNames[i][0],
+								'terminal': this.sshNames[i][1],
+								'name': this.sshNames[i][2],
+								'command': this.sshNames[i][3]
+						});
+					}
+				}
+				catch(ex) {
+					continue;
+				}
+			}
+		}
+
+		if (searchResults.length > 0) {
+			return(searchResults);
+		}
+
+		return []
+	},
+
+	getSubsearchResultSet: function(previousResults, terms) {
+		return this.getInitialResultSet(terms);
+	},
+
+}
+
+
 
 function ConnectionManager(metadata) {
 	this._init.apply(this, arguments);
@@ -48,7 +141,13 @@ ConnectionManager.prototype = {
 
 		this._configFile = GLib.build_filenamev([GLib.get_home_dir(), metadata.sw_config]);
 		this._prefFile = GLib.build_filenamev([metadata.path, metadata.sw_bin]);
-		
+
+		// Search provider
+		this._searchProvider = null;
+		this._sshList = [];
+		this._searchProvider = new SshSearchProvider();
+		Main.overview.addSearchProvider(this._searchProvider);
+
 		PanelMenu.SystemStatusButton.prototype._init.call(this, '', 'Connection Manager');
 
 		this._readConf();
@@ -64,6 +163,7 @@ ConnectionManager.prototype = {
 	_readConf: function () {
 
 		this.menu.removeAll();
+		this._sshList = [];
 
 		if (GLib.file_test(this._configFile, GLib.FileTest.EXISTS) ) {
 
@@ -76,9 +176,9 @@ ConnectionManager.prototype = {
 				jsondata.Global = '';
 			};
 
-			this._menu_open_tabs = !(/^False$/i.test(jsondata.Global.menu_open_tabs));
-			this._menu_open_windows = !(/^False$/i.test(jsondata.Global.menu_open_windows));
-			this._terminator_as_terminal = (/^True$/i.test(jsondata.Global.terminator_as_terminal));
+			this._menu_open_tabs = !(/^false$/i.test(jsondata.Global.menu_open_tabs));
+			this._menu_open_windows = !(/^false$/i.test(jsondata.Global.menu_open_windows));
+			this._terminator_as_terminal = (/^true$/i.test(jsondata.Global.terminator_as_terminal));
 
 			this._readTree(root, this, "");
 
@@ -99,7 +199,9 @@ ConnectionManager.prototype = {
 			}
 		}));
 		this.menu.addMenuItem(menuPref, this.menu.length+1);
-
+		
+		// Update ssh name list
+		this._searchProvider._update(this._sshList);
 	},
 
 
@@ -110,7 +212,7 @@ ConnectionManager.prototype = {
 
 		if (child.Type == '__item__') {
 
-			command += 'gnome-terminal';
+			command += GNOME_TERMINAL_APP;
 
 			let sshparams = child.Host.match(/^((?:\w+="(?:\\"|[^"])*" +)*)/g)[0];
 			let sshparams_noenv = child.Host.match(/^(?:\w+="(?:\\"|[^"])*" +)*(.*)$/)[1];
@@ -133,7 +235,7 @@ ConnectionManager.prototype = {
 		if (child.Type == '__app__') {
 	
 			if (child.Protocol == 'True') {
-				command += 'gnome-terminal --title=' + (child.Name).quote() + ' -e ';
+				command += GNOME_TERMINAL_APP + ' --title=' + (child.Name).quote() + ' -e ';
 				command += (child.Host).quote();
 			} else {
 				command += child.Host;
@@ -150,7 +252,7 @@ ConnectionManager.prototype = {
 
 		if (child.Type == '__item__') {
 
-			command += 'terminator';
+			command += TERMINATOR_APP;
 
 			let sshparams = child.Host.match(/^((?:\w+="(?:\\"|[^"])*" +)*)/g)[0];
 			let sshparams_noenv = child.Host.match(/^(?:\w+="(?:\\"|[^"])*" +)*(.*)$/)[1];
@@ -173,7 +275,7 @@ ConnectionManager.prototype = {
 		if (child.Type == '__app__') {
 	
 			if (child.Protocol == 'True') {
-				command += 'terminator --title=' + (child.Name).quote() + ' -e ';
+				command += TERMINATOR_APP + ' --title=' + (child.Name).quote() + ' -e ';
 				command += (child.Host).quote();
 			} else {
 				command += child.Host;
@@ -259,6 +361,16 @@ ConnectionManager.prototype = {
 						sshparamsTab[itemnr] = sshparamsT; 
 					}
 					itemnr++;
+					
+					// Add ssh entry in search array
+					this._sshList.push(
+						[
+							child.Type, 
+							this._terminator_as_terminal, 
+							child.Name+' - '+child.Host, 
+							command
+						]
+					);
 				}
 
 				if (child.Type == '__app__') {
@@ -287,6 +399,16 @@ ConnectionManager.prototype = {
 						sshparamsTab[itemnr] = sshparamsT; 
 					}
 					itemnr++;
+					
+					// Add ssh entry in search array
+					this._sshList.push(
+						[
+							child.Type, 
+							this._terminator_as_terminal, 
+							child.Name+' - '+child.Host, 
+							command
+						]
+					);
 				}
 
 
@@ -344,7 +466,7 @@ ConnectionManager.prototype = {
 						mycommand += commandTab[c]+' ';
 					}
 
-					Util.spawnCommandLine(' sh -c '+(sshparamsTab[0] + ' gnome-terminal '+mycommand).quote()+' &');
+					Util.spawnCommandLine(' sh -c '+(sshparamsTab[0]+' '+GNOME_TERMINAL_APP+' '+mycommand).quote()+' &');
 				});
 			}
 
@@ -369,6 +491,9 @@ ConnectionManager.prototype = {
 	disable: function() {
 		Main.panel._menus.removeMenu(this.menu);
 		Main.panel._rightBox.remove_actor(this.actor);
+		
+		Main.overview.removeSearchProvider(this._searchProvider);
+		this._searchProvider = null;
 		
 		this.monitor.cancel();
 	},

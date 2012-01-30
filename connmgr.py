@@ -32,7 +32,7 @@ import sys
 #   License along with this library; if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-VERSION='0.5.1'
+VERSION='0.6'
 
 # TreeStore object:
 # Type, Name, Host, Profile, Protocol
@@ -59,7 +59,7 @@ class ConfIO(str):
 
 		if 'Global' in dct:
 			for setting in dct['Global']:
-				GlobalSettings[setting] = (dct['Global'][setting] == "True");
+				GlobalSettings[setting] = (dct['Global'][setting] == True);
 
 		if 'Root' in dct:
 			dct = dct['Root']
@@ -147,7 +147,7 @@ class ConfIO(str):
 			in_file.close()
 		
 		else:
-			print "Configuration file not exists"
+			print ("Configuration file not exists")
 			configuration = self.custom_decode(json.loads('{"Root": []}'))
 
 		return configuration
@@ -536,8 +536,6 @@ This involves loss of information, it is recommended to cancel it.")
 		for key,group in block:
 			Info = dict([line.split(None, 1) for line in group])
 
-			print Info
-			
 			if (not key):
 				if (not first_block): first_block = True
 				importedHost = Info['Host']

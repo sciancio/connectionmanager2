@@ -44,7 +44,7 @@ You can also install from [Gnome Shell Extension site](https://extensions.gnome.
 Current Version
 ========================
 
-Release 0.5. [Changes](https://github.com/sciancio/connectionmanager/wiki/Changes)
+Release 0.6. [Changes](https://github.com/sciancio/connectionmanager/wiki/Changes)
 
 Other Info
 ========================
