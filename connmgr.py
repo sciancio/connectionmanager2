@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 from gi.repository import Gtk, Gdk
 from StringIO import StringIO
