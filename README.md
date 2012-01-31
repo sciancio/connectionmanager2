@@ -12,7 +12,9 @@ Some screenshot
 
 ![CM extension](http://i.imgur.com/XHu3a.png)
 
-![CM Preferences](http://i.imgur.com/R5XaX.png)
+![CM Preferences](http://i.imgur.com/kC64i.png)
+
+![CM Search](http://i.imgur.com/osOI4.jpg)
 
 
 Why
