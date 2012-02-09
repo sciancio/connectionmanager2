@@ -32,7 +32,9 @@ import sys
 #   License along with this library; if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-VERSION='0.6'
+VERSION='0.7'
+
+supportedTerms = ["Gnome Terminal", "Terminator", "Guake"]
 
 # TreeStore object:
 # Type, Name, Host, Profile, Protocol
@@ -43,7 +45,7 @@ Root = treestore.append(None, ['__folder__', 'Root', "", "", ""])
 GlobalSettings = {}
 GlobalSettings['menu_open_tabs'] = True;
 GlobalSettings['menu_open_windows'] = True;
-GlobalSettings['terminator_as_terminal'] = False;
+GlobalSettings['terminal'] = 0;
 
 # I/O class
 class ConfIO(str):
@@ -59,7 +61,12 @@ class ConfIO(str):
 
 		if 'Global' in dct:
 			for setting in dct['Global']:
-				GlobalSettings[setting] = (dct['Global'][setting] == True);
+			
+				if (type(dct['Global'][setting]) == bool):
+					GlobalSettings[setting] = (dct['Global'][setting] == True)
+					
+				if (type(dct['Global'][setting]) == int):
+					GlobalSettings[setting] = dct['Global'][setting]
 
 		if 'Root' in dct:
 			dct = dct['Root']
@@ -162,7 +169,7 @@ class ConfIO(str):
 			"Global": { \
 				"menu_open_tabs": '+ json.dumps((GlobalSettings['menu_open_tabs'])) + ', \
 				"menu_open_windows": ' + json.dumps((GlobalSettings['menu_open_windows'])) + ', \
-				"terminator_as_terminal": ' + json.dumps((GlobalSettings['terminator_as_terminal'])) + '} \
+				"terminal": ' + json.dumps((GlobalSettings['terminal'])) + '} \
 		}'
 
 		out_file = open(self.configuration_file,"w")
@@ -305,15 +312,25 @@ This involves loss of information, it is recommended to cancel it.")
 		checkOpt2 = Gtk.CheckButton('Include "Open all as tabs" selection')
 		checkOpt2.set_active(GlobalSettings['menu_open_tabs'])
 		checkOpt2.connect("toggled", self.on_check_option_toggled, "menu_open_tabs")
-		checkOpt3 = Gtk.CheckButton('Use "Terminator" as terminal (it must be installed)')
-		checkOpt3.set_active(GlobalSettings['terminator_as_terminal'])
-		checkOpt3.connect("toggled", self.on_check_option_toggled, "terminator_as_terminal")
+
+		# Label/Combo of supported terminals
+		labelTerm = Gtk.Label('Choose your preferred terminal (first check its installation)', halign="start", margin_left=10)
+		labelTerm.set_justify(3)
+		
+		terms_combo = Gtk.ComboBoxText(halign="start", margin_left=10)
+		terms_combo.set_entry_text_column(0)
+		terms_combo.set_wrap_width(1)
+		for terminal in supportedTerms:
+			terms_combo.append_text(terminal)
+		terms_combo.set_active(GlobalSettings['terminal']);
+		terms_combo.connect("changed", self.on_combo_option_toggled, "terminal")
 
 		options = Gtk.VBox(False, spacing=2)
 		options.pack_start(labelOpt, False, False, 10)
 		options.pack_start(checkOpt1, False, False, 0)
 		options.pack_start(checkOpt2, False, False, 0)
-		options.pack_start(checkOpt3, False, False, 0)
+		options.pack_start(labelTerm, False, False, 10)
+		options.pack_start(terms_combo, False, False, 0)
 	
 		# About Label
 		about = Gtk.VBox(False, spacing=2)
@@ -396,6 +413,11 @@ This involves loss of information, it is recommended to cancel it.")
 	def on_check_option_toggled(self, button, name):
 		global GlobalSettings
 		GlobalSettings[name] = button.get_active()
+		self.conf_modified()
+
+	def on_combo_option_toggled(self, combo, name):
+		global GlobalSettings
+		GlobalSettings[name] = combo.get_active()
 		self.conf_modified()
 
 	# Add Host

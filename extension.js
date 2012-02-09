@@ -23,7 +23,6 @@ const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;
 const Lang = imports.lang;
 const Shell = imports.gi.Shell;
-const Search = imports.ui.search;
 
 const Mainloop = imports.mainloop;
 const Signals = imports.signals;
@@ -37,97 +36,9 @@ const Util = imports.misc.util;
 const Gettext = imports.gettext.domain('gnome-shell-extensions');
 const _ = Gettext.gettext;
 
-const GNOME_TERMINAL_APP = 'gnome-terminal';
-const TERMINATOR_APP = 'terminator';
 
-
-// SSH / Apps Search Provider
-function SshSearchProvider() {
-	this._init();
-}
-
-SshSearchProvider.prototype = {
-	__proto__: Search.SearchProvider.prototype,
-
-	_init: function() {
-		Search.SearchProvider.prototype._init.call(this, "CONNECTION MANAGER");
-		this.sshNames = [];
-	},
-	
-	// Update list of SSH/Apps on configuration changes
-	_update: function (sshNames) {
-		this.sshNames = sshNames;
-	},
-
-	getResultMeta: function(resultId) {
-	
-		let appSys = Shell.AppSystem.get_default();
-		let app = appSys.lookup_app('gnome-session-properties.desktop');
-
-		switch (resultId.type) {
-		case '__app__':
-			app = appSys.lookup_app('gnome-session-properties.desktop');
-			break;
-		case '__item__':
-			if (resultId.terminal) {
-				app = appSys.lookup_app(TERMINATOR_APP + '.desktop');
-			} else {
-				app = appSys.lookup_app(GNOME_TERMINAL_APP + '.desktop');
-			}
-			break;
-		}
-
-		let ssh_name = resultId.name;
-
-		return {'id': resultId,
-				'name': ssh_name,
-				'createIcon': function(size) {
-								return app.create_icon_texture(size);
-							  }
-		};
-	},
-
-	activateResult: function(id) {
-		Util.spawnCommandLine(id.command);
-	},
-	
-	getInitialResultSet: function(terms) {
-		// check if a found host-name begins like the search-term
-		let searchResults = [];
-
-		for (var i=0; i<this.sshNames.length; i++) {
-			for (var j=0; j<terms.length; j++) {
-				try {
-					let pattern = new RegExp(terms[j],"gi");
-					if (this.sshNames[i][2].match(pattern)) {
-
-						searchResults.push({
-								'type': this.sshNames[i][0],
-								'terminal': this.sshNames[i][1],
-								'name': this.sshNames[i][2],
-								'command': this.sshNames[i][3]
-						});
-					}
-				}
-				catch(ex) {
-					continue;
-				}
-			}
-		}
-
-		if (searchResults.length > 0) {
-			return(searchResults);
-		}
-
-		return []
-	},
-
-	getSubsearchResultSet: function(previousResults, terms) {
-		return this.getInitialResultSet(terms);
-	},
-
-}
-
+// Import Command Terminal Manager and Search class
+const cm = imports.ui.extensionSystem.extensions["connectionmanager@ciancio.net"];
 
 
 function ConnectionManager(metadata) {
@@ -145,7 +56,7 @@ ConnectionManager.prototype = {
 		// Search provider
 		this._searchProvider = null;
 		this._sshList = [];
-		this._searchProvider = new SshSearchProvider();
+		this._searchProvider = new cm.search.SshSearchProvider;
 		Main.overview.addSearchProvider(this._searchProvider);
 
 		PanelMenu.SystemStatusButton.prototype._init.call(this, '', 'Connection Manager');
@@ -178,7 +89,11 @@ ConnectionManager.prototype = {
 
 			this._menu_open_tabs = !(/^false$/i.test(jsondata.Global.menu_open_tabs));
 			this._menu_open_windows = !(/^false$/i.test(jsondata.Global.menu_open_windows));
-			this._terminator_as_terminal = (/^true$/i.test(jsondata.Global.terminator_as_terminal));
+			this._terminal = jsondata.Global.terminal;
+			
+			// TerminalCommand class
+			if (this.TermCmd) {delete this.TermCmd; }
+			this.TermCmd = new cm.terminals.TerminalCommand(this._terminal);
 
 			this._readTree(root, this, "");
 
@@ -205,122 +120,6 @@ ConnectionManager.prototype = {
 	},
 
 
-	// This creates a command for each item using gnome-terminal
-	_createCommand: function(child) {
-
-		let command = '';
-
-		if (child.Type == '__item__') {
-
-			command += GNOME_TERMINAL_APP;
-
-			let sshparams = child.Host.match(/^((?:\w+="(?:\\"|[^"])*" +)*)/g)[0];
-			let sshparams_noenv = child.Host.match(/^(?:\w+="(?:\\"|[^"])*" +)*(.*)$/)[1];
-
-			if (sshparams && sshparams.length > 0) {
-				command = sshparams + ' ' + command + ' --disable-factory';
-			}
-
-			if (child.Profile && child.Profile.length > 0) {
-				command += ' --window-with-profile=' + (child.Profile).quote();
-			}
-
-			command += ' --title=' + (child.Name).quote();
-			command += ' -e ' + ("sh -c " + (child.Protocol + " " + sshparams_noenv).quote()).quote();
-
-			command = 'sh -c ' + command.quote();
-
-		}
-		
-		if (child.Type == '__app__') {
-	
-			if (child.Protocol == 'True') {
-				command += GNOME_TERMINAL_APP + ' --title=' + (child.Name).quote() + ' -e ';
-				command += (child.Host).quote();
-			} else {
-				command += child.Host;
-			}
-		}
-
-		return command;
-	},
-
-	// This creates a command for each item using terminator (it must be installed)
-	_createCommandTerminator: function(child) {
-
-		let command = '';
-
-		if (child.Type == '__item__') {
-
-			command += TERMINATOR_APP;
-
-			let sshparams = child.Host.match(/^((?:\w+="(?:\\"|[^"])*" +)*)/g)[0];
-			let sshparams_noenv = child.Host.match(/^(?:\w+="(?:\\"|[^"])*" +)*(.*)$/)[1];
-
-			if (sshparams && sshparams.length > 0) {
-				command = sshparams + ' ' + command;
-			}
-
-			if (child.Profile && child.Profile.length > 0) {
-				command += ' --profile=' + (child.Profile).quote();
-			}
-
-			command += ' --title=' + (child.Name).quote();
-			command += ' -e ' + ("sh -c " + (child.Protocol + " " + sshparams_noenv).quote()).quote();
-
-			command = 'sh -c ' + command.quote();
-
-		}
-		
-		if (child.Type == '__app__') {
-	
-			if (child.Protocol == 'True') {
-				command += TERMINATOR_APP + ' --title=' + (child.Name).quote() + ' -e ';
-				command += (child.Host).quote();
-			} else {
-				command += child.Host;
-			}
-		}
-
-		return command;
-	},
-
-	// This creates a command that when combined with other commands for items in same folder
-	// Will open all items in a single tabbed gnome-terminal
-	_createCommandTab: function(child) {
-		let command = '';
-		let sshparams = "";
-		let sshparams_noenv = "";
-
-		if (child.Type == '__item__') {
-
-			command += ' ';
-
-			sshparams = child.Host.match(/^((?:\w+="(?:\\"|[^"])*" +)*)/g)[0];
-			sshparams_noenv = child.Host.match(/^(?:\w+="(?:\\"|[^"])*" +)*(.*)$/)[1];
-
-			if (child.Profile && child.Profile.length > 0) {
-				command += ' --tab-with-profile=' + (child.Profile).quote();
-			}
-			else 
-			{
-				command = ' --tab '; 
-			}
-
-			command += ' --title=' + (child.Name).quote();
-			command += ' -e ' + ("sh -c " + (child.Protocol + " " + sshparams_noenv).quote()).quote();
-		}
-		
-		if (child.Type == '__app__') {
-
-			// Ignore "execute in a shell" when open all as tabs
-			command += ' --tab --title=' + (child.Name).quote() + ' -e ';
-			command += (child.Host).quote();
-		}
-
-		return [command, sshparams];
-	},
-
 	_readTree: function(node, parent, ident) {
 
 		let child, menuItem, menuSep, menuSub, icon, 
@@ -343,12 +142,13 @@ ConnectionManager.prototype = {
 							style_class: 'connmgr-icon' });
 					menuItem.addActor(icon, { align: St.Align.END});
 
-					if (this._terminator_as_terminal) {
-						command = this._createCommandTerminator(child);
-					} else {
-						command = this._createCommand(child);
-					}
-					let [commandT, sshparamsT] = this._createCommandTab(child);
+					// For each command ...
+					this.TermCmd.resetEnv();
+					this.TermCmd.setChild(child);
+					command = this.TermCmd.createCmd();
+					this.TermCmd.resetEnv();
+					let [commandT, sshparamsT] = this.TermCmd.createTabCmd();
+
 					menuItem.connect('activate', function() {
 						Util.spawnCommandLine(command); 
 					});
@@ -365,8 +165,8 @@ ConnectionManager.prototype = {
 					// Add ssh entry in search array
 					this._sshList.push(
 						[
-							child.Type, 
-							this._terminator_as_terminal, 
+							child.Type,
+							this.TermCmd.get_terminal(),
 							child.Name+' - '+child.Host, 
 							command
 						]
@@ -381,12 +181,13 @@ ConnectionManager.prototype = {
 							style_class: 'connmgr-icon' });
 					menuItem.addActor(icon, { align: St.Align.END});
 
-					if (this._terminator_as_terminal) {
-						command = this._createCommandTerminator(child);
-					} else {
-						command = this._createCommand(child);
-					}
-					let [commandT, sshparamsT] = this._createCommandTab(child);
+					// For each command ...
+					this.TermCmd.resetEnv();
+					this.TermCmd.setChild(child);
+					command = this.TermCmd.createCmd();
+					this.TermCmd.resetEnv();
+					let [commandT, sshparamsT] = this.TermCmd.createTabCmd();
+
 					menuItem.connect('activate', function() {
 						Util.spawnCommandLine(command); 
 					});
@@ -404,7 +205,7 @@ ConnectionManager.prototype = {
 					this._sshList.push(
 						[
 							child.Type, 
-							this._terminator_as_terminal, 
+							this.TermCmd.get_terminal(),
 							child.Name+' - '+child.Host, 
 							command
 						]
@@ -435,7 +236,7 @@ ConnectionManager.prototype = {
 		let position = 0;
 		if (childHasItem) {
 		
-			if (this._menu_open_windows) {
+			if (( this._menu_open_windows) && (this.TermCmd.supportWindows()) ){
 				menuItemAll = new PopupMenu.PopupMenuItem(ident+"Open all windows");
 				iconAll = new St.Icon({icon_name: 'fileopen',
 								icon_type: St.IconType.FULLCOLOR,
@@ -450,7 +251,7 @@ ConnectionManager.prototype = {
 				});
 			}
 
-			if ( (this._menu_open_tabs) && (!this._terminator_as_terminal) ) {
+			if ( (this._menu_open_tabs) && (this.TermCmd.supportTabs()) ) {
 				menuItemTabs = new PopupMenu.PopupMenuItem(ident+"Open all as tabs");
 				iconTabs = new St.Icon({icon_name: 'fileopen',
 								icon_type: St.IconType.FULLCOLOR,
@@ -458,6 +259,9 @@ ConnectionManager.prototype = {
 				menuItemTabs.addActor(iconTabs, { align: St.Align.END});
 				parent.menu.addMenuItem(menuItemTabs, position);
 				position += 1;
+
+				let term = this.TermCmd.get_terminal();
+
 				menuItemTabs.connect('activate', function() { 
 					// Generate command to open all commandTab items in a single tabbed gnome-terminal
 					let mycommand='';
@@ -466,7 +270,7 @@ ConnectionManager.prototype = {
 						mycommand += commandTab[c]+' ';
 					}
 
-					Util.spawnCommandLine(' sh -c '+(sshparamsTab[0]+' '+GNOME_TERMINAL_APP+' '+mycommand).quote()+' &');
+					Util.spawnCommandLine(' sh -c '+(sshparamsTab[0]+' '+term+' '+mycommand).quote()+' &');
 				});
 			}
 
