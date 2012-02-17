@@ -1,25 +1,5 @@
 #!/usr/bin/env python
-
-from gi.repository import GObject
-
-# Set program name for gnome shell (before importing gtk, which
-# seems to call set_prgname on its own)
-if hasattr(GObject, "set_prgname"):
-	GObject.set_prgname('Connection Manager')
-
-from gi.repository import Gtk, Gdk
-from StringIO import StringIO
-
-import gconf
-import os.path
-import shutil
-import json
-
-import itertools
-import re
-import sys
-
-
+#
 #   ConnectionManager 3 - Simple GUI app for Gnome 3 that provides a menu
 #   for initiating SSH/Telnet/Custom Apps connections.
 #   Copyright (C) 2011  Stefano Ciancio
@@ -37,6 +17,24 @@ import sys
 #   You should have received a copy of the GNU Library General Public
 #   License along with this library; if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+from gi.repository import GObject
+from gi.repository import Gtk, Gdk
+from StringIO import StringIO
+
+import gconf
+import os.path
+import shutil
+import json
+
+import itertools
+import re
+import sys
+
+# Set program name for gnome shell (before importing gtk, which
+# seems to call set_prgname on its own)
+if hasattr(GObject, "set_prgname"):
+	GObject.set_prgname('Connection Manager')
 
 VERSION = '0.7.2'
 
