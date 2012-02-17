@@ -19,6 +19,12 @@
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 from gi.repository import GObject
+
+# Set program name for gnome shell (before importing gtk, which seems to
+# call set_prgname on its own)
+if hasattr(GObject, "set_prgname"):
+    GObject.set_prgname('Connection Manager')
+
 from gi.repository import Gtk, Gdk
 from StringIO import StringIO
 
@@ -30,11 +36,6 @@ import json
 import itertools
 import re
 import sys
-
-# Set program name for gnome shell (before importing gtk, which
-# seems to call set_prgname on its own)
-if hasattr(GObject, "set_prgname"):
-    GObject.set_prgname('Connection Manager')
 
 VERSION = '0.7.2'
 
