@@ -1,9 +1,15 @@
 #!/usr/bin/env python
 
+from gi.repository import GObject
+
+# Set program name for gnome shell (before importing gtk, which
+# seems to call set_prgname on its own)
+if hasattr(GObject, "set_prgname"):
+	GObject.set_prgname('Connection Manager')
+
 from gi.repository import Gtk, Gdk
 from StringIO import StringIO
 
-import gobject
 import gconf
 import os.path
 import shutil
@@ -32,7 +38,7 @@ import sys
 #   License along with this library; if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-VERSION='0.7'
+VERSION='0.7.1'
 
 supportedTerms = ["Gnome Terminal", "Terminator", "Guake"]
 
@@ -214,7 +220,7 @@ This involves loss of information, it is recommended to cancel it.")
 
 
 	def drag_drop_cb(self, treeview, dragcontext, x, y, time):
-		gobject.timeout_add(50, self.checkValidity)
+		GObject.timeout_add(50, self.checkValidity)
 		self.conf_modified()
 
 	## ------------------------------------------------------
@@ -224,6 +230,15 @@ This involves loss of information, it is recommended to cancel it.")
 		global GlobalSettings
 		
 		Gtk.Window.__init__(self, title="ConnectionManager 3 - Preferences")
+
+		# Icon
+		try:
+			self.set_icon_from_file(sys.argv[1] + "./emblem-cm-symbolic.svg")
+		except:
+			try:
+				self.set_icon_from_file("emblem-cm-symbolic.svg")
+			except:
+				pass
 
 		self.set_default_size(450, 400)
 		self.connect("delete-event", self.on_click_me_close)

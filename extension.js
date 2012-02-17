@@ -51,7 +51,7 @@ ConnectionManager.prototype = {
 	_init: function(metadata) {
 
 		this._configFile = GLib.build_filenamev([GLib.get_home_dir(), metadata.sw_config]);
-		this._prefFile = GLib.build_filenamev([metadata.path, metadata.sw_bin]);
+		this._prefFile = GLib.build_filenamev([metadata.path, metadata.sw_bin]) + " " + metadata.path;
 
 		// Search provider
 		this._searchProvider = null;
