@@ -38,7 +38,7 @@ import sys
 #   License along with this library; if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-VERSION='0.7.1'
+VERSION='0.7.2'
 
 supportedTerms = ["Gnome Terminal", "Terminator", "Guake"]
 
@@ -288,11 +288,13 @@ This involves loss of information, it is recommended to cancel it.")
 		button4.connect("clicked", self.on_click_me_addmenu)
 		button5 = Gtk.Button("Remove")
 		button5.connect("clicked", self.on_click_me_remove)
-		button6 = Gtk.Button("Import SSHConf")
-		button6.connect("clicked", self.on_click_me_importsshconf)
+		button6 = Gtk.Button("Clone it")
+		button6.connect("clicked", self.on_click_me_cloneit)
+		button7 = Gtk.Button("Import SSHConf")
+		button7.connect("clicked", self.on_click_me_importsshconf)
 
-		button7 = Gtk.Button("Close")
-		button7.connect("clicked", self.on_click_me_close)
+		button8 = Gtk.Button("Close")
+		button8.connect("clicked", self.on_click_me_close)
 
 		# Specific Buttons
 		SpecButtons = Gtk.VButtonBox(spacing=6)
@@ -303,10 +305,11 @@ This involves loss of information, it is recommended to cancel it.")
 		SpecButtons.add(button4)
 		SpecButtons.add(button5)
 		SpecButtons.add(button6)
+		SpecButtons.add(button7)
 	
 		ExtButtons = Gtk.HButtonBox(margin_right=15, margin_bottom=6)
 		ExtButtons.set_layout(4)
-		ExtButtons.add(button7)
+		ExtButtons.add(button8)
 		# ButtonBox
 	
 		# UI design
@@ -489,6 +492,25 @@ This involves loss of information, it is recommended to cancel it.")
 				dialog.destroy()
 				return True
 
+	# Clone it - clone only Host / App
+	def on_click_me_cloneit(self, button):
+		model, current_iter = self.tv.get_selection().get_selected()
+		
+		if current_iter and (self.is_item(current_iter) or self.is_app(current_iter)): 
+
+			clonedRow = []
+			for index in range(0, self.treestore.get_n_columns()):
+				clonedRow.append(self.treestore.get_value(current_iter, index))
+			self.__addElement(clonedRow)
+
+		else:
+			dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.ERROR,
+					Gtk.ButtonsType.OK, "Please, select an Host/App")
+			dialog.show_all()
+			response = dialog.run()
+			if response == Gtk.ResponseType.OK:
+				dialog.destroy()
+				return True
 
 	# Close
 	def on_click_me_close(self, button, event=None):
