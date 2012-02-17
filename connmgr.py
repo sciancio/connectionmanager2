@@ -20,8 +20,8 @@ import re
 import sys
 
 
-#   ConnectionManager 3 - Simple GUI app for Gnome 3 that provides a menu 
-#   for initiating SSH/Telnet/Custom Apps connections. 
+#   ConnectionManager 3 - Simple GUI app for Gnome 3 that provides a menu
+#   for initiating SSH/Telnet/Custom Apps connections.
 #   Copyright (C) 2011  Stefano Ciancio
 #
 #   This library is free software; you can redistribute it and/or
@@ -38,7 +38,7 @@ import sys
 #   License along with this library; if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-VERSION='0.7.2'
+VERSION = '0.7.2'
 
 supportedTerms = ["Gnome Terminal", "Terminator", "Guake"]
 
@@ -49,9 +49,10 @@ Root = treestore.append(None, ['__folder__', 'Root', "", "", ""])
 
 # Global settings
 GlobalSettings = {}
-GlobalSettings['menu_open_tabs'] = True;
-GlobalSettings['menu_open_windows'] = True;
-GlobalSettings['terminal'] = 0;
+GlobalSettings['menu_open_tabs'] = True
+GlobalSettings['menu_open_windows'] = True
+GlobalSettings['terminal'] = 0
+
 
 # I/O class
 class ConfIO(str):
@@ -67,10 +68,10 @@ class ConfIO(str):
 
 		if 'Global' in dct:
 			for setting in dct['Global']:
-			
+
 				if (type(dct['Global'][setting]) == bool):
 					GlobalSettings[setting] = (dct['Global'][setting] == True)
-					
+
 				if (type(dct['Global'][setting]) == int):
 					GlobalSettings[setting] = dct['Global'][setting]
 
@@ -82,19 +83,18 @@ class ConfIO(str):
 
 			if child['Type'] == '__item__' or \
 				 child['Type'] == '__app__' or \
-				 child['Type'] == '__sep__' :
-				treestore.append(parent, [child['Type'], child['Name'], 
+				 child['Type'] == '__sep__':
+				treestore.append(parent, [child['Type'], child['Name'],
 							child['Host'], child['Profile'], child['Protocol']])
 
-			if child['Type'] == '__folder__' :
+			if child['Type'] == '__folder__':
 				parent_prec = parent
-				parent = treestore.append(parent, ['__folder__', 
+				parent = treestore.append(parent, ['__folder__',
 							child['Name'], "", "", ""])
 				self.custom_decode(child['Children'], parent)
 				parent = parent_prec
 
 		return treestore
-
 
 	def get_item(self, t, iter):
 		return '[{"Type":'+json.dumps(t.get_value(iter, 0))+','+ \
@@ -113,23 +113,21 @@ class ConfIO(str):
 		'"Protocol":'+json.dumps(t.get_value(iter, 4))+','+ \
 		'"Children":'
 
-
 	def is_folder(self, treestore, iter):
-		if treestore.get_value (iter, 0) == '__folder__':
+		if treestore.get_value(iter, 0) == '__folder__':
 			return True
 		else:
 			return False
-
 
 	# Encode JSON configuration
 	def custom_encode(self, t, iter):
 
 		# If node has children
 		if t.iter_has_child(iter):
-	
+
 			# Foreach child ...
 			for index in range(0, t.iter_n_children(iter)):
-			
+
 				# Child pointer
 				child = t.iter_nth_child(iter, index)
 				if not self.is_folder(t, child):
@@ -147,18 +145,17 @@ class ConfIO(str):
 
 		return self.json_output
 
-
 	# Read configuration
 	def read(self):
 		configuration = ""
 		if (os.path.exists(self.configuration_file) and \
 			os.path.isfile(self.configuration_file)):
 
-			in_file = open(self.configuration_file,"r")
-			
+			in_file = open(self.configuration_file, "r")
+
 			configuration = self.custom_decode(json.load(in_file))
 			in_file.close()
-		
+
 		else:
 			print ("Configuration file not exists")
 			configuration = self.custom_decode(json.loads('{"Root": []}'))
@@ -168,7 +165,7 @@ class ConfIO(str):
 	# Write configuration
 	def write(self, treestore1):
 		global GlobalSettings
-		
+
 		self.json_output = ''
 		self.custom_encode(treestore1, Root)
 		self.json_output = '{"Root": ['+self.json_output+'], \
@@ -178,7 +175,7 @@ class ConfIO(str):
 				"terminal": ' + json.dumps((GlobalSettings['terminal'])) + '} \
 		}'
 
-		out_file = open(self.configuration_file,"w")
+		out_file = open(self.configuration_file, "w")
 		json.dump(json.loads(self.json_output), out_file, indent=2)
 		out_file.close()
 
@@ -186,7 +183,7 @@ class ConfIO(str):
 # Main class
 class ConnectionManager(Gtk.Window):
 
-	first_time_changes = True;
+	first_time_changes = True
 
 	tv = Gtk.TreeView()
 	bad_path = None
@@ -197,8 +194,8 @@ class ConnectionManager(Gtk.Window):
 		if piter:
 			if (self.is_item(piter) or self.is_sep(piter)):
 				self.bad_path = model.get_path(iter)
-			
-		elif (self.treestore.get_value(iter, 1) != 'Root'): # Root
+
+		elif (self.treestore.get_value(iter, 1) != 'Root'):  # Root
 			self.bad_path = model.get_path(iter)
 
 	def checkValidity(self):
@@ -206,7 +203,7 @@ class ConnectionManager(Gtk.Window):
 
 		self.bad_path = None
 		treestore.foreach(self.fixTree, '')
-		
+
 		if self.bad_path:
 			dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.ERROR,
 				Gtk.ButtonsType.OK, "Configuration Error! ")
@@ -218,17 +215,15 @@ This involves loss of information, it is recommended to cancel it.")
 				dialog.destroy()
 				return False
 
-
 	def drag_drop_cb(self, treeview, dragcontext, x, y, time):
 		GObject.timeout_add(50, self.checkValidity)
 		self.conf_modified()
 
 	## ------------------------------------------------------
 
-
 	def __init__(self):
 		global GlobalSettings
-		
+
 		Gtk.Window.__init__(self, title="ConnectionManager 3 - Preferences")
 
 		# Icon
@@ -246,7 +241,7 @@ This involves loss of information, it is recommended to cancel it.")
 		# ---------------------------------------------
 		# Define input
 		self.treestore = Gtk.TreeStore(str, str, str, str)
-		# ---------------------------------------------	
+		# ---------------------------------------------
 
 		self.conf_file = os.getenv("HOME") + "/.connmgr"
 		self.configuration = ConfIO(self.conf_file)
@@ -267,8 +262,8 @@ This involves loss of information, it is recommended to cancel it.")
 		self.tv.connect("button_press_event", self.treeview_clicked)
 		self.tv.connect("drag_drop", self.drag_drop_cb)
 
-		renderer = [0, 1, 2, 3];
-		column = [0, 1, 2, 3];
+		renderer = [0, 1, 2, 3]
+		column = [0, 1, 2, 3]
 		title = ["Title"]
 
 		# Design field
@@ -276,7 +271,7 @@ This involves loss of information, it is recommended to cancel it.")
 			renderer[index+1] = Gtk.CellRendererText()
 			column[index+1] = Gtk.TreeViewColumn(item, renderer[index+1], text=index+1)
 			self.tv.append_column(column[index+1])
-	
+
 		# Buttons
 		button1 = Gtk.Button("Add Host")
 		button1.connect("clicked", self.on_click_me_addhost)
@@ -306,12 +301,12 @@ This involves loss of information, it is recommended to cancel it.")
 		SpecButtons.add(button5)
 		SpecButtons.add(button6)
 		SpecButtons.add(button7)
-	
+
 		ExtButtons = Gtk.HButtonBox(margin_right=15, margin_bottom=6)
 		ExtButtons.set_layout(4)
 		ExtButtons.add(button8)
 		# ButtonBox
-	
+
 		# UI design
 		scrolled_window = Gtk.ScrolledWindow(hadjustment=None, vadjustment=None)
 		scrolled_window.add_with_viewport(self.tv)
@@ -319,7 +314,7 @@ This involves loss of information, it is recommended to cancel it.")
 		mybox = Gtk.HBox()
 		mybox.pack_start(scrolled_window, True, True, 6)
 		mybox.pack_start(SpecButtons, False, False, 6)
-	
+
 		# Options Label
 		labelOpt = Gtk.Label('<span size="15000">Please, choose your configuration</span>')
 		labelOpt.set_justify(2)
@@ -334,13 +329,13 @@ This involves loss of information, it is recommended to cancel it.")
 		# Label/Combo of supported terminals
 		labelTerm = Gtk.Label('Choose your preferred terminal (first check its installation)', halign="start", margin_left=10)
 		labelTerm.set_justify(3)
-		
+
 		terms_combo = Gtk.ComboBoxText(halign="start", margin_left=10)
 		terms_combo.set_entry_text_column(0)
 		terms_combo.set_wrap_width(1)
 		for terminal in supportedTerms:
 			terms_combo.append_text(terminal)
-		terms_combo.set_active(GlobalSettings['terminal']);
+		terms_combo.set_active(GlobalSettings['terminal'])
 		terms_combo.connect("changed", self.on_combo_option_toggled, "terminal")
 
 		options = Gtk.VBox(False, spacing=2)
@@ -349,7 +344,7 @@ This involves loss of information, it is recommended to cancel it.")
 		options.pack_start(checkOpt2, False, False, 0)
 		options.pack_start(labelTerm, False, False, 10)
 		options.pack_start(terms_combo, False, False, 0)
-	
+
 		# About Label
 		about = Gtk.VBox(False, spacing=2)
 		label_about = Gtk.Label('<span size="30000">ConnectionManager 3</span>\n<span>Version: '+VERSION+'\n\nSimple GUI app for Gnome 3 that provides\n a menu for initiating SSH/Telnet/Custom Apps connections.\n\nCopyright 2011 Stefano Ciancio</span>')
@@ -376,7 +371,6 @@ This involves loss of information, it is recommended to cancel it.")
 
 		self.add(ExtBox)
 
-
 	def conf_modified(self):
 
 		if self.first_time_changes:
@@ -386,19 +380,18 @@ This involves loss of information, it is recommended to cancel it.")
 					os.path.isfile(self.conf_file):
 				shutil.copy(self.conf_file, self.conf_file+'.bak')
 
-			self.first_time_changes = False;
+			self.first_time_changes = False
 
 		# Save configuratione every time
 		self.configuration.write(self.treestore)
 
-
 	# Add Element (item, separator, folder)
 	def __addElement(self, newrow):
 		model, current_iter = self.tv.get_selection().get_selected()
-		if current_iter: 
-		
+		if current_iter:
+
 			if self.is_folder(current_iter):
-			
+
 				if newrow[0] == '__folder__' or newrow[0] == '__item__' or newrow[0] == '__app__':
 					response, row = self.item_dialog(newrow)
 					if response:
@@ -447,8 +440,7 @@ This involves loss of information, it is recommended to cancel it.")
 	def on_click_me_addapp(self, button):
 		newrow = ['__app__', 'New App ...', '', '', '']
 		self.__addElement(newrow)
-	
-	
+
 	# Add Separator
 	def on_click_me_addsep(self, button):
 		newrow = ['__sep__', '_____________________', '', '', '']
@@ -458,7 +450,6 @@ This involves loss of information, it is recommended to cancel it.")
 	def on_click_me_addmenu(self, button):
 		newrow = ['__folder__', 'New Folder ...', '', '', '']
 		self.__addElement(newrow)
-	
 
 	# Remove element (item or folder)
 	def on_click_me_remove(self, button):
@@ -478,12 +469,12 @@ This involves loss of information, it is recommended to cancel it.")
 					self.conf_modified()
 
 				dialog.destroy()
-			
+
 			else:
 				self.treestore.remove(current_iter)
 				self.conf_modified()
-				
-		else: 
+
+		else:
 			dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.ERROR,
 					Gtk.ButtonsType.OK, "Please, select an element")
 			dialog.show_all()
@@ -495,8 +486,8 @@ This involves loss of information, it is recommended to cancel it.")
 	# Clone it - clone only Host / App
 	def on_click_me_cloneit(self, button):
 		model, current_iter = self.tv.get_selection().get_selected()
-		
-		if current_iter and (self.is_item(current_iter) or self.is_app(current_iter)): 
+
+		if current_iter and (self.is_item(current_iter) or self.is_app(current_iter)):
 
 			clonedRow = []
 			for index in range(0, self.treestore.get_n_columns()):
@@ -516,7 +507,6 @@ This involves loss of information, it is recommended to cancel it.")
 	def on_click_me_close(self, button, event=None):
 		Gtk.main_quit()
 
-
 	def on_click_me_importsshconf(self, button):
 		imported_from_SSH_config_folder = '__Imported_from_SSH_config__'
 		model, current_iter = self.tv.get_selection().get_selected()
@@ -524,17 +514,17 @@ This involves loss of information, it is recommended to cancel it.")
 		# Check if import folder already exists
 		if model.iter_has_child(Root):
 			iter = model.iter_children(Root)
-			
+
 			import_found = False
 			import_iter = ''
 			while (iter):
-				if (model.get_value(iter, 0) == '__folder__' and 
+				if (model.get_value(iter, 0) == '__folder__' and
 						model.get_value(iter, 1) == imported_from_SSH_config_folder):
 					import_found = True
 					import_iter = iter
 
 				iter = model.iter_next(iter)
-			
+
 			if (import_found):
 
 				# User dialog
@@ -549,18 +539,17 @@ This involves loss of information, it is recommended to cancel it.")
 				if response == Gtk.ResponseType.NO:
 					dialog.destroy()
 					return True
-				
+
 				# Remove imported folder
 				self.treestore.remove(import_iter)
-				
+
 				# Read and import ssh config
-				self.import_ssh_config(imported_from_SSH_config_folder);
-				
+				self.import_ssh_config(imported_from_SSH_config_folder)
+
 			else:
 				self.conf_modified()
 				# Read and import ssh config
-				self.import_ssh_config(imported_from_SSH_config_folder);
-
+				self.import_ssh_config(imported_from_SSH_config_folder)
 
 	def import_ssh_config(self, imported_from_SSH_config_folder):
 
@@ -582,7 +571,7 @@ This involves loss of information, it is recommended to cancel it.")
 		def a_host(line):
 			return get_value(line, 'Host') != ''
 
-		import_iter = treestore.append(Root, ['__folder__', 
+		import_iter = treestore.append(Root, ['__folder__',
 					imported_from_SSH_config_folder, "", "", ""])
 
 		lines = [line.strip() for line in file(SSH_CONFIG_FILE)]
@@ -592,46 +581,46 @@ This involves loss of information, it is recommended to cancel it.")
 		block = itertools.groupby(blanks_removed, not_a_host)
 
 		first_block = False
-		for key,group in block:
+		for key, group in block:
 			Info = dict([line.split(None, 1) for line in group])
 
 			if (not key):
-				if (not first_block): first_block = True
+				if (not first_block):
+                                        first_block = True
 				importedHost = Info['Host']
 			if (key and first_block):
-				if 'HostName' in Info : importedHostname = Info['HostName']
-				if 'User' in Info : importedHostname = Info['User']+'@'+importedHostname
-		
+				if 'HostName' in Info:
+                                        importedHostname = Info['HostName']
+				if 'User' in Info:
+                                        importedHostname = Info['User']+'@'+importedHostname
+
 				if importedHost != '*':
-					treestore.append(import_iter, ['__item__', 
+					treestore.append(import_iter, ['__item__',
 						importedHost, importedHostname, 'Default', 'ssh'])
 
-
-
 	def is_folder(self, iter):
-		if self.treestore.get_value (iter, 0) == '__folder__':
+		if self.treestore.get_value(iter, 0) == '__folder__':
 			return True
 		else:
 			return False
 
 	def is_item(self, iter):
-		if self.treestore.get_value (iter, 0) == '__item__':
+		if self.treestore.get_value(iter, 0) == '__item__':
 			return True
 		else:
 			return False
 
 	def is_app(self, iter):
-		if self.treestore.get_value (iter, 0) == '__app__':
+		if self.treestore.get_value(iter, 0) == '__app__':
 			return True
 		else:
 			return False
 
 	def is_sep(self, iter):
-		if self.treestore.get_value (iter, 0) == '__sep__':
+		if self.treestore.get_value(iter, 0) == '__sep__':
 			return True
 		else:
 			return False
-
 
 	def item_dialog(self, row):
 
@@ -650,11 +639,11 @@ This involves loss of information, it is recommended to cancel it.")
 		label1 = Gtk.Label("Title")
 		entry1 = Gtk.Entry()
 		entry1.set_text(row[1])
-	
+
 		label2 = Gtk.Label("Host")
 		entry2 = Gtk.Entry()
 		entry2.set_text(row[2])
-	
+
 		# Profile Combo ----------------------------
 		label3 = Gtk.Label("Profile")
 
@@ -663,19 +652,19 @@ This involves loss of information, it is recommended to cancel it.")
 		# GConf key template to get visible name for a profile.
 		GnomeTermProfName = "/apps/gnome-terminal/profiles/%s/visible_name"
 
-		client = gconf.client_get_default ()
+		client = gconf.client_get_default()
 		names = client.get_list(GnomeTermProfiles, 1)
-	
+
 		entry3 = Gtk.ComboBoxText()
 		for index, item in enumerate(names):
 			profile = client.get_string(GnomeTermProfName.replace('%s', item))
 			entry3.append_text(profile)
 			if profile.decode('utf-8') == row[3]:
 				entry3.set_active(index)
-		
+
 		entry3.set_entry_text_column(0)
 		# ----------------------------
-		
+
 		label4 = Gtk.Label("Protocol")
 		entry4 = Gtk.ComboBoxText()
 		protocol = ['ssh', 'telnet']
@@ -683,7 +672,7 @@ This involves loss of information, it is recommended to cancel it.")
 			entry4.append_text(item)
 			if item == row[4]:
 				entry4.set_active(index)
-		
+
 		entry4.set_entry_text_column(0)
 
 		label5 = Gtk.Label("Command")
@@ -696,41 +685,40 @@ This involves loss of information, it is recommended to cancel it.")
 		if row[4] == 'True':
 			check7.set_active(True)
 
-
 		if row[0] == '__folder__':
-			table = Gtk.Table(1, 2, True, 
+			table = Gtk.Table(1, 2, True,
 			margin_right=15, margin_bottom=15, margin_top=15)
 			table.attach(label1, 0, 1, 0, 1)
 			table.attach(entry1, 1, 2, 0, 1)
 
 		if row[0] == '__item__':
-			table = Gtk.Table(4, 2, True, 
+			table = Gtk.Table(4, 2, True,
 				margin_right=15, margin_bottom=15,
 				margin_top=15)
 			table.set_row_spacings(6)
 			table.set_col_spacings(6)
-	
+
 			table.attach(label1, 0, 1, 0, 1)
 			table.attach(entry1, 1, 2, 0, 1)
-	
+
 			table.attach(label2, 0, 1, 1, 2)
 			table.attach(entry2, 1, 2, 1, 2)
-	
+
 			table.attach(label3, 0, 1, 2, 3)
 			table.attach(entry3, 1, 2, 2, 3)
 			table.attach(label4, 0, 1, 3, 4)
 			table.attach(entry4, 1, 2, 3, 4)
 
 		if row[0] == '__app__':
-			table = Gtk.Table(4, 2, True, 
+			table = Gtk.Table(4, 2, True,
 				margin_right=15, margin_bottom=15,
 				margin_top=15)
 			table.set_row_spacings(6)
 			table.set_col_spacings(6)
-	
+
 			table.attach(label1, 0, 1, 0, 1)
 			table.attach(entry1, 1, 2, 0, 1)
-	
+
 			table.attach(label5, 0, 1, 1, 2)
 			table.attach(entry5, 1, 2, 1, 2)
 			table.attach(button5, 1, 2, 2, 3)
@@ -742,7 +730,7 @@ This involves loss of information, it is recommended to cancel it.")
 		while 1:
 			response = dialog.run()
 			if response == Gtk.ResponseType.OK:
-		
+
 				if row[0] == '__folder__':
 					newrow = [row[0], entry1.get_text(), row[2], row[3], row[4]]
 					if entry1.get_text() != '':
@@ -755,9 +743,9 @@ This involves loss of information, it is recommended to cancel it.")
 						eresponse = edialog.run()
 						if eresponse == Gtk.ResponseType.OK:
 							edialog.destroy()
-					
+
 				if row[0] == '__item__':
-					newrow = [row[0], entry1.get_text(), entry2.get_text(), 
+					newrow = [row[0], entry1.get_text(), entry2.get_text(),
 						entry3.get_active_text(), entry4.get_active_text()]
 					if entry1.get_text() != '' and entry2.get_text() != '' and entry3.get_active_text() != None:
 						dialog.destroy()
@@ -771,7 +759,7 @@ This involves loss of information, it is recommended to cancel it.")
 							edialog.destroy()
 
 				if row[0] == '__app__':
-					newrow = [row[0], entry1.get_text(), entry5.get_text(), 
+					newrow = [row[0], entry1.get_text(), entry5.get_text(),
 						row[3], str(check7.get_active())]
 					if entry1.get_text() != '' and entry5.get_text() != '':
 						dialog.destroy()
@@ -783,13 +771,11 @@ This involves loss of information, it is recommended to cancel it.")
 						eresponse = edialog.run()
 						if eresponse == Gtk.ResponseType.OK:
 							edialog.destroy()
-		
+
 			if response == Gtk.ResponseType.CANCEL:
 				newrow = row
 				dialog.destroy()
 				return False, row
-
-
 
 	def treeview_clicked(self, treeview, event=None):
 		if event.button == 1 and event.type == Gdk.EventType._2BUTTON_PRESS:
@@ -798,20 +784,19 @@ This involves loss of information, it is recommended to cancel it.")
 			# Root
 			if model.iter_parent(current_iter) == None:
 				return
-			
+
 			# Separator
 			if model.get_value(current_iter, 0) == '__sep__':
 				return
 
-
-			currentrow = [(model.get_value(current_iter, 0)), 
+			currentrow = [(model.get_value(current_iter, 0)),
 				(model.get_value(current_iter, 1)),
 				(model.get_value(current_iter, 2)),
 				(model.get_value(current_iter, 3)),
 				(model.get_value(current_iter, 4))]
-		
+
 			response, newrow = self.item_dialog(currentrow)
-		
+
 			if response:
 				model.set_value(current_iter, 1, newrow[1])
 				model.set_value(current_iter, 2, newrow[2])
@@ -834,8 +819,6 @@ This involves loss of information, it is recommended to cancel it.")
 		dialog.destroy()
 
 
-win = ConnectionManager() 
+win = ConnectionManager()
 win.show_all()
 Gtk.main()
-
-
