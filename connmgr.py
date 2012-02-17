@@ -818,6 +818,11 @@ This involves loss of information, it is recommended to cancel it.")
         dialog.destroy()
 
 
-win = ConnectionManager()
-win.show_all()
-Gtk.main()
+def main():
+    win = ConnectionManager()
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == '__main__':
+    main()
