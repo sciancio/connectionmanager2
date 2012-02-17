@@ -233,7 +233,7 @@ This involves loss of information, it is recommended to cancel it.")
 
 		# Icon
 		try:
-			self.set_icon_from_file(sys.argv[1] + "./emblem-cm-symbolic.svg")
+			self.set_icon_from_file(sys.argv[1] + "/emblem-cm-symbolic.svg")
 		except:
 			try:
 				self.set_icon_from_file("emblem-cm-symbolic.svg")
