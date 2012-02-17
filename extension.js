@@ -108,9 +108,9 @@ ConnectionManager.prototype = {
 		let menuPref = new PopupMenu.PopupMenuItem("Connection Manager Settings");
 		menuPref.connect('activate', Lang.bind(this, function() {
 			try {
-				Util.trySpawnCommandLine('python ' + this._prefFile);
-			} catch (e) {
 				Util.trySpawnCommandLine('python2 ' + this._prefFile);
+			} catch (e) {
+				Util.trySpawnCommandLine('python ' + this._prefFile);
 			}
 		}));
 		this.menu.addMenuItem(menuPref, this.menu.length+1);
