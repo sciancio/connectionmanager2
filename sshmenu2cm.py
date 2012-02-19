@@ -1,9 +1,5 @@
 #!/usr/bin/env python
-
-import yaml
-import os.path
-import json
-
+#
 #   ConnectionManager 3 - a simple script to convert SSHMenu configuration file 
 #   to a CM configuration file.
 #   It ignore "global" and "classes" sections of SSHMenu
@@ -24,62 +20,72 @@ import json
 #   License along with this library; if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-f = open(os.getenv("HOME") + '/.sshmenu')
-dataMap = yaml.load(f)
-f.close()
+import yaml
+import os.path
+import json
 
-json_output = ""
+F = open(os.getenv("HOME") + '/.sshmenu')
+DATAMAP = yaml.load(F)
+F.close()
 
-def print_item(type, name, host, profile, protocol):
-	return '[{"Type":'+json.dumps(type)+','+ \
-	'"Name":'+json.dumps(str(name))+','+ \
-	'"Host":'+json.dumps(str(host))+','+ \
-	'"Profile":'+json.dumps(str(profile))+','+ \
-	'"Protocol":'+json.dumps(str(protocol))+','+ \
-	'"Children":[]' \
-	'}]'
+JSON_OUTPUT = ""
 
-def print_folder(type, name, host, profile, protocol):
-	return '"Type":'+json.dumps(str(type))+','+ \
-	'"Name":'+json.dumps(str(name))+','+ \
-	'"Host":'+json.dumps(str(host))+','+ \
-	'"Profile":'+json.dumps(str(profile))+','+ \
-	'"Protocol":'+json.dumps(str(protocol))+','+ \
-	'"Children":'
+def print_item(itype, iname, ihost, iprofile, iprotocol):
+    """Print item json string"""
+    return '[{"Type":'+json.dumps(itype)+','+ \
+    '"Name":'+json.dumps(str(iname))+','+ \
+    '"Host":'+json.dumps(str(ihost))+','+ \
+    '"Profile":'+json.dumps(str(iprofile))+','+ \
+    '"Protocol":'+json.dumps(str(iprotocol))+','+ \
+    '"Children":[]' \
+    '}]'
 
-def convert(dct, parent=''):
+def print_folder(ftype, fname, fhost, fprofile, fprotocol):
+    """Print folder json string"""
+    return '"Type":'+json.dumps(str(ftype))+','+ \
+    '"Name":'+json.dumps(str(fname))+','+ \
+    '"Host":'+json.dumps(str(fhost))+','+ \
+    '"Profile":'+json.dumps(str(fprofile))+','+ \
+    '"Protocol":'+json.dumps(str(fprotocol))+','+ \
+    '"Children":'
 
-	global json_output
+def convert(dct):
+    """Convert sshmenu config to cm config"""
 
-	items = dct;
+    global JSON_OUTPUT
 
-	for index, child in enumerate(items):
+    items = dct
 
-		if child['type'] == 'menu':
-			json_output += "[{"+print_folder('__folder__', child['title'], None, None, None)+"["
-			convert(child['items'], '')
-			json_output += "]}]"
-			if index+1 != len(items):
-				json_output += ","
-	
-		if child['type'] == 'host':
-			json_output += print_item('__item__', child['title'], child['sshparams'], child['profile'], 'ssh')
-			if index+1 != len(items):
-				json_output += ","
+    for index, child in enumerate(items):
 
-		if child['type'] == 'separator':
-			json_output += print_item('__sep__', '_____________________', '', '', '')
-			if index+1 != len(items):
-				json_output += ","
-			
-	return json_output
+        if child['type'] == 'menu':
+            JSON_OUTPUT += "[{"+print_folder('__folder__', child['title'], 
+                None, None, None)+"["
+            convert(child['items'])
+            JSON_OUTPUT += "]}]"
+            if index+1 != len(items):
+                JSON_OUTPUT += ","
+
+        if child['type'] == 'host':
+            JSON_OUTPUT += print_item('__item__', child['title'], 
+                child['sshparams'], child['profile'], 'ssh')
+            if index+1 != len(items):
+                JSON_OUTPUT += ","
+
+        if child['type'] == 'separator':
+            JSON_OUTPUT += print_item('__sep__', '_____________________',
+                '', '', '')
+            if index+1 != len(items):
+                JSON_OUTPUT += ","
+
+    return JSON_OUTPUT
 
 
 
 # Read Configuration
-json_output = '{"Root": [' + convert(dataMap['items'], '') + ']}'
+JSON_OUTPUT = '{"Root": [' + convert(DATAMAP['items']) + ']}'
 
-print(json.dumps(json.loads(json_output), indent=2))
+print(json.dumps(json.loads(JSON_OUTPUT), indent=2))
 
 
 
