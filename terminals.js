@@ -25,74 +25,74 @@ const TERMINALS = new Array("gnome-terminal", "terminator", "guake");
 // ******************************************************
 function TerminalCommand(terminal) {
 
-	switch (terminal) {
-		case 0:
-			this.resClass = new GnomeTerminalCommand(terminal);
-			break;
-		case 1:
-			this.resClass = new TerminatorCommand(terminal);
-			break;
-		case 2:
-			this.resClass = new GuakeCommand(terminal);
-			break;
-		default:
-			this.resClass = new GnomeTerminalCommand(terminal);
-			break;
-	}
+    switch (terminal) {
+        case 0:
+            this.resClass = new GnomeTerminalCommand(terminal);
+            break;
+        case 1:
+            this.resClass = new TerminatorCommand(terminal);
+            break;
+        case 2:
+            this.resClass = new GuakeCommand(terminal);
+            break;
+        default:
+            this.resClass = new GnomeTerminalCommand(terminal);
+            break;
+    }
 
-	return this._init(terminal);
+    return this._init(terminal);
 }
 
-TerminalCommand.prototype = {
+    TerminalCommand.prototype = {
 
-	_init: function(terminal) {
-	
-		this.terminal = terminal;
-		this.cmdTerm = TERMINALS[terminal];
-		this.child = null;
+    _init: function(terminal) {
 
-		this.resetEnv();
-		return this.resClass;
-	},
-	
-	// Reset all variable
-	resetEnv: function() {
-		this.command = '';
-		this.sshparams = '';
-		this.sshparams_noenv = '';
-	},
-	
-	// Get parameters from command line
-	_setParams: function() {
-			this.sshparams = this.child.Host.match(/^((?:\w+="(?:\\"|[^"])*" +)*)/g)[0];
-			this.sshparams_noenv = this.child.Host.match(/^(?:\w+="(?:\\"|[^"])*" +)*(.*)$/)[1];
-	},
-	
-	// Set a new child
-	setChild: function (child) {
-		this.child = child;
-	},
+        this.terminal = terminal;
+        this.cmdTerm = TERMINALS[terminal];
+        this.child = null;
 
-	get_terminal: function () {
-		return this.cmdTerm;
-	},
+        this.resetEnv();
+        return this.resClass;
+    },
 
-	supportWindows: function () {
-		if (!this.createCmd()) return false; else return true;
-	},
-	supportTabs: function () {
-		if (!this.createTabCmd()[0]) return false; else return true;
-	},
+    // Reset all variable
+    resetEnv: function() {
+        this.command = '';
+        this.sshparams = '';
+        this.sshparams_noenv = '';
+    },
+
+    // Get parameters from command line
+    _setParams: function() {
+            this.sshparams = this.child.Host.match(/^((?:\w+="(?:\\"|[^"])*" +)*)/g)[0];
+            this.sshparams_noenv = this.child.Host.match(/^(?:\w+="(?:\\"|[^"])*" +)*(.*)$/)[1];
+    },
+
+    // Set a new child
+    setChild: function (child) {
+        this.child = child;
+    },
+
+    get_terminal: function () {
+        return this.cmdTerm;
+    },
+
+    supportWindows: function () {
+        if (!this.createCmd()) return false; else return true;
+    },
+    supportTabs: function () {
+        if (!this.createTabCmd()[0]) return false; else return true;
+    },
 
 
-	// Overload these methods for any new terminal
+    // Overload these methods for any new terminal
 
-	createCmd: function () {
-		return false;
-	},
-	createTabCmd: function () {
-		return false;
-	},
+    createCmd: function () {
+        return false;
+    },
+    createTabCmd: function () {
+        return false;
+    },
 
 }
 
@@ -101,75 +101,75 @@ TerminalCommand.prototype = {
 // Gnome Terminal class derived from base class
 // ******************************************************
 function GnomeTerminalCommand(terminal) {
-	this._init(terminal);
+    this._init(terminal);
 }
 
-GnomeTerminalCommand.prototype = {
-	__proto__: TerminalCommand.prototype,
+    GnomeTerminalCommand.prototype = {
+    __proto__: TerminalCommand.prototype,
 
-	createCmd: function () {
+    createCmd: function () {
 
-		if (this.child.Type == '__item__') {
-			this._setParams();
+        if (this.child.Type == '__item__') {
+            this._setParams();
 
-			this.command += this.cmdTerm;
+            this.command += this.cmdTerm;
 
-			if (this.sshparams && this.sshparams.length > 0) {
-				this.command = this.sshparams + ' ' + this.command + ' --disable-factory';
-			}
+            if (this.sshparams && this.sshparams.length > 0) {
+                this.command = this.sshparams + ' ' + this.command + ' --disable-factory';
+            }
 
-			if (this.child.Profile && this.child.Profile.length > 0) {
-				this.command += ' --window-with-profile=' + (this.child.Profile).quote();
-			}
+            if (this.child.Profile && this.child.Profile.length > 0) {
+                this.command += ' --window-with-profile=' + (this.child.Profile).quote();
+            }
 
-			this.command += ' --title=' + (this.child.Name).quote();
-			this.command += ' -e ' + ("sh -c " + (this.child.Protocol + " " + this.sshparams_noenv).quote()).quote();
+            this.command += ' --title=' + (this.child.Name).quote();
+            this.command += ' -e ' + ("sh -c " + (this.child.Protocol + " " + this.sshparams_noenv).quote()).quote();
 
-			this.command = 'sh -c ' + this.command.quote();
+            this.command = 'sh -c ' + this.command.quote();
 
-		}
-		
-		if (this.child.Type == '__app__') {
-	
-			if (this.child.Protocol == 'True') {
-				this.command += this.cmdTerm + ' --title=' + (this.child.Name).quote() + ' -e ';
-				this.command += (this.child.Host).quote();
-			} else {
-				this.command += this.child.Host;
-			}
-		}
+        }
 
-		return this.command;
-	},
-	
-	createTabCmd: function () {
-	
-		if (this.child.Type == '__item__') {
-			this._setParams();
+        if (this.child.Type == '__app__') {
 
-			this.command += ' ';
+            if (this.child.Protocol == 'True') {
+                this.command += this.cmdTerm + ' --title=' + (this.child.Name).quote() + ' -e ';
+                this.command += (this.child.Host).quote();
+            } else {
+                this.command += this.child.Host;
+            }
+        }
 
-			if (this.child.Profile && this.child.Profile.length > 0) {
-				this.command += ' --tab-with-profile=' + (this.child.Profile).quote();
-			}
-			else 
-			{
-				this.command = ' --tab ';
-			}
+        return this.command;
+    },
 
-			this.command += ' --title=' + (this.child.Name).quote();
-			this.command += ' -e ' + ("sh -c " + (this.child.Protocol + " " + this.sshparams_noenv).quote()).quote();
-		}
-		
-		if (this.child.Type == '__app__') {
+    createTabCmd: function () {
 
-			// Ignore "execute in a shell" when open all as tabs
-			this.command += ' --tab --title=' + (this.child.Name).quote() + ' -e ';
-			this.command += (this.child.Host).quote();
-		}
+        if (this.child.Type == '__item__') {
+            this._setParams();
 
-		return [this.command, this.sshparams];
-	}
+            this.command += ' ';
+
+            if (this.child.Profile && this.child.Profile.length > 0) {
+                this.command += ' --tab-with-profile=' + (this.child.Profile).quote();
+            }
+            else 
+            {
+                this.command = ' --tab ';
+            }
+
+            this.command += ' --title=' + (this.child.Name).quote();
+            this.command += ' -e ' + ("sh -c " + (this.child.Protocol + " " + this.sshparams_noenv).quote()).quote();
+        }
+
+        if (this.child.Type == '__app__') {
+
+            // Ignore "execute in a shell" when open all as tabs
+            this.command += ' --tab --title=' + (this.child.Name).quote() + ' -e ';
+            this.command += (this.child.Host).quote();
+        }
+
+        return [this.command, this.sshparams];
+    }
 
 }
 
@@ -177,83 +177,83 @@ GnomeTerminalCommand.prototype = {
 // Terminator class derived from base class
 // ******************************************************
 function TerminatorCommand(terminal) {
-	this._init(terminal);
+    this._init(terminal);
 }
 
-TerminatorCommand.prototype = {
-	__proto__: TerminalCommand.prototype,
+    TerminatorCommand.prototype = {
+    __proto__: TerminalCommand.prototype,
 
-	createCmd: function () {
+    createCmd: function () {
 
-		if (this.child.Type == '__item__') {
-			this._setParams();
+        if (this.child.Type == '__item__') {
+            this._setParams();
 
-			this.command += this.cmdTerm;
+            this.command += this.cmdTerm;
 
-			if (this.sshparams && this.sshparams.length > 0) {
-				this.command = this.sshparams + ' ' + this.command;
-			}
+            if (this.sshparams && this.sshparams.length > 0) {
+                this.command = this.sshparams + ' ' + this.command;
+            }
 
-			if (this.child.Profile && this.child.Profile.length > 0) {
-				this.command += ' --profile=' + (this.child.Profile).quote();
-			}
+            if (this.child.Profile && this.child.Profile.length > 0) {
+                this.command += ' --profile=' + (this.child.Profile).quote();
+            }
 
-			this.command += ' --title=' + (this.child.Name).quote();
-			this.command += ' -e ' + ("sh -c " + (this.child.Protocol + " " + this.sshparams_noenv).quote()).quote();
+            this.command += ' --title=' + (this.child.Name).quote();
+            this.command += ' -e ' + ("sh -c " + (this.child.Protocol + " " + this.sshparams_noenv).quote()).quote();
 
-			this.command = 'sh -c ' + this.command.quote();
+            this.command = 'sh -c ' + this.command.quote();
 
-		}
-		
-		if (this.child.Type == '__app__') {
-	
-			if (this.child.Protocol == 'True') {
-				this.command += this.cmdTerm + ' --title=' + (this.child.Name).quote() + ' -e ';
-				this.command += (this.child.Host).quote();
-			} else {
-				this.command += this.child.Host;
-			}
-		}
+        }
 
-		return this.command;
-	}
-}
+        if (this.child.Type == '__app__') {
+
+            if (this.child.Protocol == 'True') {
+                this.command += this.cmdTerm + ' --title=' + (this.child.Name).quote() + ' -e ';
+                this.command += (this.child.Host).quote();
+            } else {
+                this.command += this.child.Host;
+            }
+        }
+
+        return this.command;
+    }
+    }
 
 // ******************************************************
 // Guake class derived from base class
 // ******************************************************
 function GuakeCommand(terminal) {
-	this._init(terminal);
+    this._init(terminal);
 }
 
-GuakeCommand.prototype = {
-	__proto__: TerminalCommand.prototype,
+    GuakeCommand.prototype = {
+    __proto__: TerminalCommand.prototype,
 
-	createCmd: function () {
+    createCmd: function () {
 
-		if (this.child.Type == '__item__') {
-			this._setParams();
+        if (this.child.Type == '__item__') {
+            this._setParams();
 
-			this.command += this.cmdTerm;
+            this.command += this.cmdTerm;
 
-			this.command += ' --new-tab=' + (this.child.Name).quote();
-			this.command += ' --rename-tab=' + (this.child.Name).quote();
-			this.command += ' -e ' + (this.sshparams +" sh -c " + (this.child.Protocol + " " + this.sshparams_noenv).quote()).quote();
+            this.command += ' --new-tab=' + (this.child.Name).quote();
+            this.command += ' --rename-tab=' + (this.child.Name).quote();
+            this.command += ' -e ' + (this.sshparams +" sh -c " + (this.child.Protocol + " " + this.sshparams_noenv).quote()).quote();
 
-		}
-		
-		if (this.child.Type == '__app__') {
-	
-			if (this.child.Protocol == 'True') {
-				this.command += this.cmdTerm + '  --rename-tab=' + (this.child.Name).quote()  + ' --new-tab=' + (this.child.Name).quote() + ' -e ';
-				this.command += (this.child.Host).quote();
-			} else {
-				this.command += this.child.Host;
-			}
-		}
+        }
 
-		return this.command;
-	}
+        if (this.child.Type == '__app__') {
+
+            if (this.child.Protocol == 'True') {
+                this.command += this.cmdTerm + '  --rename-tab=' + (this.child.Name).quote()  + ' --new-tab=' + (this.child.Name).quote() + ' -e ';
+                this.command += (this.child.Host).quote();
+            } else {
+                this.command += this.child.Host;
+            }
+        }
+
+        return this.command;
+    }
 
 }
 

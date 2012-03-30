@@ -23,84 +23,84 @@ const Util = imports.misc.util;
 
 // SSH / Apps Search Provider
 function SshSearchProvider() {
-	this._init();
+    this._init();
 }
 
-SshSearchProvider.prototype = {
-	__proto__: Search.SearchProvider.prototype,
+    SshSearchProvider.prototype = {
+    __proto__: Search.SearchProvider.prototype,
 
-	_init: function() {
-		Search.SearchProvider.prototype._init.call(this, "CONNECTION MANAGER");
-		this.sshNames = [];
-	},
-	
-	// Update list of SSH/Apps on configuration changes
-	_update: function (sshNames) {
-		this.sshNames = sshNames;
-	},
+    _init: function() {
+        Search.SearchProvider.prototype._init.call(this, "CONNECTION MANAGER");
+        this.sshNames = [];
+    },
 
-	getResultMeta: function(resultId) {
-	
-		let appSys = Shell.AppSystem.get_default();
-		let app = appSys.lookup_app('gnome-session-properties.desktop');
+    // Update list of SSH/Apps on configuration changes
+    _update: function (sshNames) {
+        this.sshNames = sshNames;
+    },
 
-		switch (resultId.type) {
-		case '__app__':
-			app = appSys.lookup_app('gnome-session-properties.desktop');
-			break;
-		case '__item__':
-			app = appSys.lookup_app(resultId.terminal + '.desktop');
-			break;
-		}
+    getResultMeta: function(resultId) {
 
-		let ssh_name = resultId.name;
+        let appSys = Shell.AppSystem.get_default();
+        let app = appSys.lookup_app('gnome-session-properties.desktop');
 
-		return {'id': resultId,
-				'name': ssh_name,
-				'createIcon': function(size) {
-								return app.create_icon_texture(size);
-							  }
-		};
-	},
+        switch (resultId.type) {
+        case '__app__':
+            app = appSys.lookup_app('gnome-session-properties.desktop');
+            break;
+        case '__item__':
+            app = appSys.lookup_app(resultId.terminal + '.desktop');
+            break;
+        }
 
-	activateResult: function(id) {
-		Util.spawnCommandLine(id.command);
-	},
-	
-	getInitialResultSet: function(terms) {
-		// check if a found host-name begins like the search-term
-		let searchResults = [];
+        let ssh_name = resultId.name;
 
-		for (var i=0; i<this.sshNames.length; i++) {
-			for (var j=0; j<terms.length; j++) {
-				try {
-					let pattern = new RegExp(terms[j],"gi");
-					if (this.sshNames[i][2].match(pattern)) {
+        return {'id': resultId,
+                'name': ssh_name,
+                'createIcon': function(size) {
+                                return app.create_icon_texture(size);
+                              }
+        };
+    },
 
-						searchResults.push({
-								'type': this.sshNames[i][0],
-								'terminal': this.sshNames[i][1],
-								'name': this.sshNames[i][2],
-								'command': this.sshNames[i][3]
-						});
-					}
-				}
-				catch(ex) {
-					continue;
-				}
-			}
-		}
+    activateResult: function(id) {
+        Util.spawnCommandLine(id.command);
+    },
 
-		if (searchResults.length > 0) {
-			return(searchResults);
-		}
+    getInitialResultSet: function(terms) {
+        // check if a found host-name begins like the search-term
+        let searchResults = [];
 
-		return []
-	},
+        for (var i=0; i<this.sshNames.length; i++) {
+            for (var j=0; j<terms.length; j++) {
+                try {
+                    let pattern = new RegExp(terms[j],"gi");
+                    if (this.sshNames[i][2].match(pattern)) {
 
-	getSubsearchResultSet: function(previousResults, terms) {
-		return this.getInitialResultSet(terms);
-	},
+                        searchResults.push({
+                                'type': this.sshNames[i][0],
+                                'terminal': this.sshNames[i][1],
+                                'name': this.sshNames[i][2],
+                                'command': this.sshNames[i][3]
+                        });
+                    }
+                }
+                catch(ex) {
+                    continue;
+                }
+            }
+        }
+
+        if (searchResults.length > 0) {
+            return(searchResults);
+        }
+
+        return []
+    },
+
+    getSubsearchResultSet: function(previousResults, terms) {
+        return this.getInitialResultSet(terms);
+    },
 
 }
 

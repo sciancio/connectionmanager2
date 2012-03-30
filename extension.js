@@ -38,274 +38,278 @@ const _ = Gettext.gettext;
 
 
 // Import Command Terminal Manager and Search class
-const cm = imports.ui.extensionSystem.extensions["connectionmanager@ciancio.net"];
-
+const CM = imports.misc.extensionUtils.getCurrentExtension();
+const Search = CM.imports.search;
+const Terminals = CM.imports.terminals;
 
 function ConnectionManager(metadata) {
-	this._init.apply(this, arguments);
+    this._init.apply(this, arguments);
 }
 
 ConnectionManager.prototype = {
-	__proto__: PanelMenu.SystemStatusButton.prototype,
+    __proto__: PanelMenu.SystemStatusButton.prototype,
 
-	_init: function(metadata) {
+    _init: function(metadata) {
 
-		this._configFile = GLib.build_filenamev([GLib.get_home_dir(), metadata.sw_config]);
-		this._prefFile = GLib.build_filenamev([metadata.path, metadata.sw_bin]) + " " + metadata.path;
+        let CMPrefs = CM.metadata;
 
-		// Search provider
-		this._searchProvider = null;
-		this._sshList = [];
-		this._searchProvider = new cm.search.SshSearchProvider;
-		Main.overview.addSearchProvider(this._searchProvider);
+        this._configFile = GLib.build_filenamev([GLib.get_home_dir(), CMPrefs['sw_config']]);
+        this._prefFile = GLib.build_filenamev([metadata.path, CMPrefs['sw_bin']]) + " " + metadata.path;
 
-		PanelMenu.SystemStatusButton.prototype._init.call(this, '', 'Connection Manager');
+        // Search provider
+        this._searchProvider = null;
+        this._sshList = [];
+        this._searchProvider = new Search.SshSearchProvider;
+        Main.overview.addSearchProvider(this._searchProvider);
 
-		this._readConf();
+        PanelMenu.SystemStatusButton.prototype._init.call(this, '', 'Connection Manager');
 
-		// Icon
-		let icon_file = GLib.build_filenamev([metadata.path, "emblem-cm-symbolic.svg"]);
-		this._CMlogo = Gio.icon_new_for_string(icon_file);
-		this.setGIcon(this._CMlogo);
-		this.actor.set_size(40, 26);
+        this._readConf();
 
-	},
+        // Icon
+        let icon_file = GLib.build_filenamev([metadata.path, "emblem-cm-symbolic.svg"]);
+        this._CMlogo = Gio.icon_new_for_string(icon_file);
+        this.setGIcon(this._CMlogo);
+        this.actor.set_size(40, 26);
 
-	_readConf: function () {
+    },
 
-		this.menu.removeAll();
-		this._sshList = [];
+    _readConf: function () {
 
-		if (GLib.file_test(this._configFile, GLib.FileTest.EXISTS) ) {
+        this.menu.removeAll();
+        this._sshList = [];
 
-			let filedata = GLib.file_get_contents(this._configFile, null, 0);
-			let jsondata = JSON.parse(filedata[1]);
-			let root = jsondata['Root'];
+        if (GLib.file_test(this._configFile, GLib.FileTest.EXISTS) ) {
 
-			// Global Settings
-			if (typeof(jsondata.Global) == 'undefined') {
-				jsondata.Global = '';
-			};
+            let filedata = GLib.file_get_contents(this._configFile, null, 0);
+            let jsondata = JSON.parse(filedata[1]);
+            let root = jsondata['Root'];
 
-			this._menu_open_tabs = !(/^false$/i.test(jsondata.Global.menu_open_tabs));
-			this._menu_open_windows = !(/^false$/i.test(jsondata.Global.menu_open_windows));
-			this._terminal = jsondata.Global.terminal;
-			
-			// TerminalCommand class
-			if (this.TermCmd) {delete this.TermCmd; }
-			this.TermCmd = new cm.terminals.TerminalCommand(this._terminal);
+            // Global Settings
+            if (typeof(jsondata.Global) == 'undefined') {
+                jsondata.Global = '';
+            };
 
-			this._readTree(root, this, "");
+            this._menu_open_tabs = !(/^false$/i.test(jsondata.Global.menu_open_tabs));
+            this._menu_open_windows = !(/^false$/i.test(jsondata.Global.menu_open_windows));
+            this._terminal = jsondata.Global.terminal;
 
-		} else {
-			global.logError("CONNMGR: Error reading config file " + this._configFile);
-			let filedata = null
-		}
+            // TerminalCommand class
+            if (this.TermCmd) {delete this.TermCmd; }
+            this.TermCmd = new Terminals.TerminalCommand(this._terminal);
 
-		let menuSepPref = new PopupMenu.PopupSeparatorMenuItem();
-		this.menu.addMenuItem(menuSepPref, this.menu.length);
-		
-		let menuPref = new PopupMenu.PopupMenuItem("Connection Manager Settings");
-		menuPref.connect('activate', Lang.bind(this, function() {
-			try {
-				Util.trySpawnCommandLine('python ' + this._prefFile);
-			} catch (e) {
-				Util.trySpawnCommandLine('python2 ' + this._prefFile);
-			}
-		}));
-		this.menu.addMenuItem(menuPref, this.menu.length+1);
-		
-		// Update ssh name list
-		this._searchProvider._update(this._sshList);
-	},
+            this._readTree(root, this, "");
 
+        } else {
+            global.logError("CONNMGR: Error reading config file " + this._configFile);
+            let filedata = null
+        }
 
-	_readTree: function(node, parent, ident) {
+        let menuSepPref = new PopupMenu.PopupSeparatorMenuItem();
+        this.menu.addMenuItem(menuSepPref, this.menu.length);
 
-		let child, menuItem, menuSep, menuSub, icon, 
-			menuItemAll, iconAll, menuSepAll, menuItemTabs, iconTabs, ident_prec;
-		let childHasItem = false, commandAll = new Array(), commandTab = new Array(), 
-			sshparamsTab = new Array(), itemnr = 0;
+        let menuPref = new PopupMenu.PopupMenuItem("Connection Manager Settings");
+        menuPref.connect('activate', Lang.bind(this, function() {
+            try {
+                Util.trySpawnCommandLine('python ' + this._prefFile);
+            } catch (e) {
+                Util.trySpawnCommandLine('python2 ' + this._prefFile);
+            }
+        }));
+        this.menu.addMenuItem(menuPref, this.menu.length+1);
 
-		// For each child ... 
-		for (let i = 0; i < node.length; i++) {
-			child = node[i][0];
-			let command;
-
-			if (child.hasOwnProperty('Type')) {
-
-				if (child.Type == '__item__') {
-
-					menuItem = new PopupMenu.PopupMenuItem(ident+child.Name);
-					icon = new St.Icon({icon_name: 'terminal',
-							icon_type: St.IconType.FULLCOLOR,
-							style_class: 'connmgr-icon' });
-					menuItem.addActor(icon, { align: St.Align.END});
-
-					// For each command ...
-					this.TermCmd.resetEnv();
-					this.TermCmd.setChild(child);
-					command = this.TermCmd.createCmd();
-					this.TermCmd.resetEnv();
-					let [commandT, sshparamsT] = this.TermCmd.createTabCmd();
-
-					menuItem.connect('activate', function() {
-						Util.spawnCommandLine(command); 
-					});
-					parent.menu.addMenuItem(menuItem, i);
-					
-					childHasItem = true;
-					if (this._menu_open_windows) { commandAll[itemnr] = command; }
-					if (this._menu_open_tabs) { 
-						commandTab[itemnr] = commandT; 
-						sshparamsTab[itemnr] = sshparamsT; 
-					}
-					itemnr++;
-					
-					// Add ssh entry in search array
-					this._sshList.push(
-						[
-							child.Type,
-							this.TermCmd.get_terminal(),
-							child.Name+' - '+child.Host, 
-							command
-						]
-					);
-				}
-
-				if (child.Type == '__app__') {
-
-					menuItem = new PopupMenu.PopupMenuItem(ident+child.Name);
-					icon = new St.Icon({icon_name: 'gtk-execute',
-							icon_type: St.IconType.FULLCOLOR,
-							style_class: 'connmgr-icon' });
-					menuItem.addActor(icon, { align: St.Align.END});
-
-					// For each command ...
-					this.TermCmd.resetEnv();
-					this.TermCmd.setChild(child);
-					command = this.TermCmd.createCmd();
-					this.TermCmd.resetEnv();
-					let [commandT, sshparamsT] = this.TermCmd.createTabCmd();
-
-					menuItem.connect('activate', function() {
-						Util.spawnCommandLine(command); 
-					});
-					parent.menu.addMenuItem(menuItem, i);
-
-					childHasItem = true;
-					if (this._menu_open_windows) { commandAll[itemnr] = command; }
-					if (this._menu_open_tabs) {
-						commandTab[itemnr] = commandT;
-						sshparamsTab[itemnr] = sshparamsT; 
-					}
-					itemnr++;
-					
-					// Add ssh entry in search array
-					this._sshList.push(
-						[
-							child.Type, 
-							this.TermCmd.get_terminal(),
-							child.Name+' - '+child.Host, 
-							command
-						]
-					);
-				}
+        // Update ssh name list
+        this._searchProvider._update(this._sshList);
+    },
 
 
-				if (child.Type == '__sep__') {
-					menuSep = new PopupMenu.PopupSeparatorMenuItem();
-					parent.menu.addMenuItem(menuSep, i);
-				}
-				if (child.Type == '__folder__') {
+    _readTree: function(node, parent, ident) {
 
-					menuSub = new PopupMenu.PopupSubMenuMenuItem(ident+child.Name);
-					icon = new St.Icon({icon_name: 'folder',
-							icon_type: St.IconType.FULLCOLOR,
-							style_class: 'connmgr-icon' });
-					menuSub.addActor(icon, { align: St.Align.END});
+        let child, menuItem, menuSep, menuSub, icon, 
+            menuItemAll, iconAll, menuSepAll, menuItemTabs, iconTabs, ident_prec;
+        let childHasItem = false, commandAll = new Array(), commandTab = new Array(), 
+            sshparamsTab = new Array(), itemnr = 0;
 
-					parent.menu.addMenuItem(menuSub);
-					ident_prec = ident;
-					this._readTree(child.Children, menuSub, ident+"  ");
-					
-				}
-			}
-		}
-		
-		let position = 0;
-		if (childHasItem) {
-		
-			if (( this._menu_open_windows) && (this.TermCmd.supportWindows()) ){
-				menuItemAll = new PopupMenu.PopupMenuItem(ident+"Open all windows");
-				iconAll = new St.Icon({icon_name: 'fileopen',
-								icon_type: St.IconType.FULLCOLOR,
-								style_class: 'connmgr-icon' });
-				menuItemAll.addActor(iconAll, { align: St.Align.END});
-				parent.menu.addMenuItem(menuItemAll, position);
-				position += 1;
-				menuItemAll.connect('activate', function() { 
-					for (let c = 0; c < commandAll.length; c++) {
-						Util.spawnCommandLine(commandAll[c]);
-					}
-				});
-			}
+        // For each child ... 
+        for (let i = 0; i < node.length; i++) {
+            child = node[i][0];
+            let command;
 
-			if ( (this._menu_open_tabs) && (this.TermCmd.supportTabs()) ) {
-				menuItemTabs = new PopupMenu.PopupMenuItem(ident+"Open all as tabs");
-				iconTabs = new St.Icon({icon_name: 'fileopen',
-								icon_type: St.IconType.FULLCOLOR,
-								style_class: 'connmgr-icon' });
-				menuItemTabs.addActor(iconTabs, { align: St.Align.END});
-				parent.menu.addMenuItem(menuItemTabs, position);
-				position += 1;
+            if (child.hasOwnProperty('Type')) {
 
-				let term = this.TermCmd.get_terminal();
+                if (child.Type == '__item__') {
 
-				menuItemTabs.connect('activate', function() { 
-					// Generate command to open all commandTab items in a single tabbed gnome-terminal
-					let mycommand='';
+                    menuItem = new PopupMenu.PopupMenuItem(ident+child.Name);
+                    icon = new St.Icon({icon_name: 'terminal',
+                            icon_type: St.IconType.FULLCOLOR,
+                            style_class: 'connmgr-icon' });
+                    menuItem.addActor(icon, { align: St.Align.END});
 
-					for (let c = 0; c < commandTab.length; c++) {
-						mycommand += commandTab[c]+' ';
-					}
+                    // For each command ...
+                    this.TermCmd.resetEnv();
+                    this.TermCmd.setChild(child);
+                    command = this.TermCmd.createCmd();
+                    this.TermCmd.resetEnv();
+                    let [commandT, sshparamsT] = this.TermCmd.createTabCmd();
 
-					Util.spawnCommandLine(' sh -c '+(sshparamsTab[0]+' '+term+' '+mycommand).quote()+' &');
-				});
-			}
+                    menuItem.connect('activate', function() {
+                        Util.spawnCommandLine(command); 
+                    });
+                    parent.menu.addMenuItem(menuItem, i);
 
-			menuSepAll = new PopupMenu.PopupSeparatorMenuItem();
-			parent.menu.addMenuItem(menuSepAll, position);
+                    childHasItem = true;
+                    if (this._menu_open_windows) { commandAll[itemnr] = command; }
+                    if (this._menu_open_tabs) { 
+                        commandTab[itemnr] = commandT; 
+                        sshparamsTab[itemnr] = sshparamsT; 
+                    }
+                    itemnr++;
 
-		}
-		ident = ident_prec;
-	},
+                    // Add ssh entry in search array
+                    this._sshList.push(
+                        [
+                            child.Type,
+                            this.TermCmd.get_terminal(),
+                            child.Name+' - '+child.Host, 
+                            command
+                        ]
+                    );
+                }
 
-	enable: function() {
-		let _children = Main.panel._rightBox.get_children();
-		Main.panel._rightBox.insert_actor(this.actor, _children.length - 2);
-		Main.panel._menus.addMenu(this.menu);
+                if (child.Type == '__app__') {
 
-		let file = Gio.file_new_for_path(this._configFile);
-		this.monitor = file.monitor(Gio.FileMonitorFlags.NONE, null);
-		this.monitor.connect('changed', Lang.bind(this, this._readConf));
+                    menuItem = new PopupMenu.PopupMenuItem(ident+child.Name);
+                    icon = new St.Icon({icon_name: 'gtk-execute',
+                            icon_type: St.IconType.FULLCOLOR,
+                            style_class: 'connmgr-icon' });
+                    menuItem.addActor(icon, { align: St.Align.END});
 
-	},
-	
-	disable: function() {
-		Main.panel._menus.removeMenu(this.menu);
-		Main.panel._rightBox.remove_actor(this.actor);
-		
-		Main.overview.removeSearchProvider(this._searchProvider);
-		this._searchProvider = null;
-		
-		this.monitor.cancel();
-	},
+                    // For each command ...
+                    this.TermCmd.resetEnv();
+                    this.TermCmd.setChild(child);
+                    command = this.TermCmd.createCmd();
+                    this.TermCmd.resetEnv();
+                    let [commandT, sshparamsT] = this.TermCmd.createTabCmd();
+
+                    menuItem.connect('activate', function() {
+                        Util.spawnCommandLine(command); 
+                    });
+                    parent.menu.addMenuItem(menuItem, i);
+
+                    childHasItem = true;
+                    if (this._menu_open_windows) { commandAll[itemnr] = command; }
+                    if (this._menu_open_tabs) {
+                        commandTab[itemnr] = commandT;
+                        sshparamsTab[itemnr] = sshparamsT; 
+                    }
+                    itemnr++;
+
+                    // Add ssh entry in search array
+                    this._sshList.push(
+                        [
+                            child.Type, 
+                            this.TermCmd.get_terminal(),
+                            child.Name+' - '+child.Host, 
+                            command
+                        ]
+                    );
+                }
+
+
+                if (child.Type == '__sep__') {
+                    menuSep = new PopupMenu.PopupSeparatorMenuItem();
+                    parent.menu.addMenuItem(menuSep, i);
+                }
+                if (child.Type == '__folder__') {
+
+                    menuSub = new PopupMenu.PopupSubMenuMenuItem(ident+child.Name);
+                    icon = new St.Icon({icon_name: 'folder',
+                            icon_type: St.IconType.FULLCOLOR,
+                            style_class: 'connmgr-icon' });
+                    menuSub.addActor(icon, { align: St.Align.END});
+
+                    parent.menu.addMenuItem(menuSub);
+                    ident_prec = ident;
+                    this._readTree(child.Children, menuSub, ident+"  ");
+
+                }
+            }
+        }
+
+        let position = 0;
+        if (childHasItem) {
+
+            if (( this._menu_open_windows) && (this.TermCmd.supportWindows()) ){
+                menuItemAll = new PopupMenu.PopupMenuItem(ident+"Open all windows");
+                iconAll = new St.Icon({icon_name: 'fileopen',
+                                icon_type: St.IconType.FULLCOLOR,
+                                style_class: 'connmgr-icon' });
+                menuItemAll.addActor(iconAll, { align: St.Align.END});
+                parent.menu.addMenuItem(menuItemAll, position);
+                position += 1;
+                menuItemAll.connect('activate', function() { 
+                    for (let c = 0; c < commandAll.length; c++) {
+                        Util.spawnCommandLine(commandAll[c]);
+                    }
+                });
+            }
+
+            if ( (this._menu_open_tabs) && (this.TermCmd.supportTabs()) ) {
+                menuItemTabs = new PopupMenu.PopupMenuItem(ident+"Open all as tabs");
+                iconTabs = new St.Icon({icon_name: 'fileopen',
+                                icon_type: St.IconType.FULLCOLOR,
+                                style_class: 'connmgr-icon' });
+                menuItemTabs.addActor(iconTabs, { align: St.Align.END});
+                parent.menu.addMenuItem(menuItemTabs, position);
+                position += 1;
+
+                let term = this.TermCmd.get_terminal();
+
+                menuItemTabs.connect('activate', function() { 
+                    // Generate command to open all commandTab items in a single tabbed gnome-terminal
+                    let mycommand='';
+
+                    for (let c = 0; c < commandTab.length; c++) {
+                        mycommand += commandTab[c]+' ';
+                    }
+
+                    Util.spawnCommandLine(' sh -c '+(sshparamsTab[0]+' '+term+' '+mycommand).quote()+' &');
+                });
+            }
+
+            menuSepAll = new PopupMenu.PopupSeparatorMenuItem();
+            parent.menu.addMenuItem(menuSepAll, position);
+
+        }
+        ident = ident_prec;
+    },
+
+    enable: function() {
+        let _children = Main.panel._rightBox.get_children();
+        Main.panel._rightBox.insert_child_at_index(this.actor, _children.length - 2);
+        Main.panel._rightBox.child_set(this.actor, {y_fill : true } );
+        Main.panel._menus.addMenu(this.menu);
+
+        let file = Gio.file_new_for_path(this._configFile);
+        this.monitor = file.monitor(Gio.FileMonitorFlags.NONE, null);
+        this.monitor.connect('changed', Lang.bind(this, this._readConf));
+
+    },
+
+    disable: function() {
+        Main.panel._menus.removeMenu(this.menu);
+        Main.panel._rightBox.remove_child(this.actor);
+
+        Main.overview.removeSearchProvider(this._searchProvider);
+        this._searchProvider = null;
+
+        this.monitor.cancel();
+    },
 
 };
 
 
 function init(metadata) {
-	return new ConnectionManager(metadata);
+    return new ConnectionManager(metadata);
 }
 
