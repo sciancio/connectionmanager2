@@ -19,15 +19,12 @@
 const Shell = imports.gi.Shell;
 const Search = imports.ui.search;
 const Util = imports.misc.util;
-
+const Lang = imports.lang;
 
 // SSH / Apps Search Provider
-function SshSearchProvider() {
-    this._init();
-}
-
-    SshSearchProvider.prototype = {
-    __proto__: Search.SearchProvider.prototype,
+const SshSearchProvider = new Lang.Class({
+    Name: 'SshSearchProvider',
+    Extends: Search.SearchProvider,
 
     _init: function() {
         Search.SearchProvider.prototype._init.call(this, "CONNECTION MANAGER");
@@ -39,28 +36,36 @@ function SshSearchProvider() {
         this.sshNames = sshNames;
     },
 
-    getResultMeta: function(resultId) {
+    getResultMetas: function(resultIds) {
 
-        let appSys = Shell.AppSystem.get_default();
-        let app = appSys.lookup_app('gnome-session-properties.desktop');
+        let metas = [];
+        
+        for (let i = 0; i < resultIds.length; i++) {
+        
+            let resultId = resultIds[i];
 
-        switch (resultId.type) {
-        case '__app__':
-            app = appSys.lookup_app('gnome-session-properties.desktop');
-            break;
-        case '__item__':
-            app = appSys.lookup_app(resultId.terminal + '.desktop');
-            break;
+            let appSys = Shell.AppSystem.get_default();
+            let app = appSys.lookup_app('gnome-session-properties.desktop');
+
+            switch (resultId.type) {
+            case '__app__':
+                app = appSys.lookup_app('gnome-session-properties.desktop');
+                break;
+            case '__item__':
+                app = appSys.lookup_app(resultId.terminal + '.desktop');
+                break;
+            }
+
+            let ssh_name = resultId.name;
+
+            metas.push({'id': resultId,
+                    'name': ssh_name,
+                    'createIcon': function(size) {
+                                    return app.create_icon_texture(size);
+                                  }
+            });
         }
-
-        let ssh_name = resultId.name;
-
-        return {'id': resultId,
-                'name': ssh_name,
-                'createIcon': function(size) {
-                                return app.create_icon_texture(size);
-                              }
-        };
+        return metas;
     },
 
     activateResult: function(id) {
@@ -100,7 +105,7 @@ function SshSearchProvider() {
 
     getSubsearchResultSet: function(previousResults, terms) {
         return this.getInitialResultSet(terms);
-    },
+    }
 
-}
+});
 
