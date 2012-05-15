@@ -595,6 +595,8 @@ This involves loss of information, it is recommended to revert it.")
                                         importedHostname = Info['HostName']
                 if 'User' in Info:
                                         importedHostname = Info['User']+'@'+importedHostname
+                if 'Port' in Info:
+                                        importedHostname = '-p '+Info['Port']+' '+importedHostname
 
                 if importedHost != '*':
                     treestore.append(import_iter, ['__item__',
