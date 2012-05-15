@@ -207,7 +207,7 @@ class ConnectionManager(Gtk.Window):
             dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.ERROR,
                 Gtk.ButtonsType.OK, "Configuration Error! ")
             dialog.format_secondary_text("The destination is not a folder. \
-This involves loss of information, it is recommended to cancel it.")
+This involves loss of information, it is recommended to revert it.")
             dialog.show_all()
             response = dialog.run()
             if response == Gtk.ResponseType.OK:
@@ -535,7 +535,6 @@ This involves loss of information, it is recommended to cancel it.")
             dialog.show_all()
             response = dialog.run()
             if response == Gtk.ResponseType.YES:
-                self.conf_modified()
                 dialog.destroy()
 
             if response == Gtk.ResponseType.NO:
@@ -547,11 +546,12 @@ This involves loss of information, it is recommended to cancel it.")
 
             # Read and import ssh config
             self.import_ssh_config(imported_from_SSH_config_folder)
+            self.conf_modified()
 
         else:
-            self.conf_modified()
             # Read and import ssh config
             self.import_ssh_config(imported_from_SSH_config_folder)
+            self.conf_modified()
 
     def import_ssh_config(self, imported_from_SSH_config_folder):
 
