@@ -523,32 +523,35 @@ This involves loss of information, it is recommended to cancel it.")
                     import_iter = iter
 
                 iter = model.iter_next(iter)
+                
+        else:
+            import_found = False
 
-            if (import_found):
+        if (import_found):
 
-                # User dialog
-                dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.ERROR,
-                        Gtk.ButtonsType.YES_NO, "Imported folder content will be overwritten \nfrom a new ssh config import.\n\nConfirm?")
-                dialog.show_all()
-                response = dialog.run()
-                if response == Gtk.ResponseType.YES:
-                    self.conf_modified()
-                    dialog.destroy()
-
-                if response == Gtk.ResponseType.NO:
-                    dialog.destroy()
-                    return True
-
-                # Remove imported folder
-                self.treestore.remove(import_iter)
-
-                # Read and import ssh config
-                self.import_ssh_config(imported_from_SSH_config_folder)
-
-            else:
+            # User dialog
+            dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.ERROR,
+                    Gtk.ButtonsType.YES_NO, "Imported folder content will be overwritten \nfrom a new ssh config import.\n\nConfirm?")
+            dialog.show_all()
+            response = dialog.run()
+            if response == Gtk.ResponseType.YES:
                 self.conf_modified()
-                # Read and import ssh config
-                self.import_ssh_config(imported_from_SSH_config_folder)
+                dialog.destroy()
+
+            if response == Gtk.ResponseType.NO:
+                dialog.destroy()
+                return True
+
+            # Remove imported folder
+            self.treestore.remove(import_iter)
+
+            # Read and import ssh config
+            self.import_ssh_config(imported_from_SSH_config_folder)
+
+        else:
+            self.conf_modified()
+            # Read and import ssh config
+            self.import_ssh_config(imported_from_SSH_config_folder)
 
     def import_ssh_config(self, imported_from_SSH_config_folder):
 
