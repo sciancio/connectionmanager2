@@ -200,6 +200,8 @@ class ConnectionManager(Gtk.Window):
     def checkValidity(self):
         model, iter = self.tv.get_selection().get_selected()
 
+        self.conf_modified()
+
         self.bad_path = None
         treestore.foreach(self.fixTree, '')
 
@@ -216,7 +218,6 @@ This involves loss of information, it is recommended to revert it.")
 
     def drag_drop_cb(self, treeview, dragcontext, x, y, time):
         GObject.timeout_add(50, self.checkValidity)
-        self.conf_modified()
 
     ## ------------------------------------------------------
 
@@ -671,7 +672,7 @@ This involves loss of information, it is recommended to revert it.")
 
         label4 = Gtk.Label("Protocol")
         entry4 = Gtk.ComboBoxText()
-        protocol = ['ssh', 'telnet']
+        protocol = ['ssh', 'telnet', 'mosh']
         for index, item in enumerate(protocol):
             entry4.append_text(item)
             if item == row[4]:
