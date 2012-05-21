@@ -37,7 +37,7 @@ import itertools
 import re
 import sys
 
-VERSION = '0.7.2'
+VERSION = '0.7.4'
 
 supportedTerms = ["Gnome Terminal", "Terminator", "Guake"]
 
