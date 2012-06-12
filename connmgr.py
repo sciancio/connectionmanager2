@@ -39,7 +39,7 @@ import sys
 
 VERSION = '0.7.4'
 
-supportedTerms = ["Gnome Terminal", "Terminator", "Guake"]
+supportedTerms = ["Gnome Terminal", "Terminator", "Guake", "TMux"]
 
 # TreeStore object:
 # Type, Name, Host, Profile, Protocol
