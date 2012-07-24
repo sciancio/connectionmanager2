@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 #
 #   ConnectionManager 3 - Simple GUI app for Gnome 3 that provides a menu
 #   for initiating SSH/Telnet/Custom Apps connections.
