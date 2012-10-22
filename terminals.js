@@ -17,7 +17,7 @@
 //   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 // Supported terminals. This terminal list must match as in connmgr.py
-const TERMINALS = new Array("gnome-terminal", "terminator", "guake");
+const TERMINALS = new Array("gnome-terminal", "terminator", "guake", 'lilyterm');
 
 
 // ******************************************************
@@ -34,6 +34,9 @@ function TerminalCommand(terminal) {
             break;
         case 2:
             this.resClass = new GuakeCommand(terminal);
+            break;
+        case 3:
+            this.resClass = new LilyTermCommand(terminal);
             break;
         default:
             this.resClass = new GnomeTerminalCommand(terminal);
@@ -253,6 +256,77 @@ function GuakeCommand(terminal) {
         }
 
         return this.command;
+    }
+
+}
+
+// ******************************************************
+// LilyTerm class derived from base class
+// ******************************************************
+function LilyTermCommand(terminal) {
+    this._init(terminal);
+}
+
+    LilyTermCommand.prototype = {
+    __proto__: TerminalCommand.prototype,
+
+    createCmd: function () {
+
+        if (this.child.Type == '__item__') {
+            this._setParams();
+
+            this.command += this.cmdTerm;
+
+            if (this.sshparams && this.sshparams.length > 0) {
+                this.command = this.sshparams + ' ' + this.command;
+            }
+
+            this.command += ' --title ' + (this.child.Name).quote();
+	    this.command += ' -s -H -e ' + (this.child.Protocol + " " + this.sshparams_noenv).quote();
+
+            this.command = 'sh -c ' + this.command.quote();
+	    
+        }
+
+        if (this.child.Type == '__app__') {
+
+            if (this.child.Protocol == 'True') {
+                this.command += this.cmdTerm + ' --title ' + (this.child.Name).quote() + ' -s -H -e ';
+            }
+            this.command += this.child.Host;
+        }
+
+        return this.command;
+    },
+
+    createTabCmd: function () {
+
+        if (this.child.Type == '__item__') {
+            this._setParams();
+
+            this.command += this.cmdTerm;
+
+            if (this.sshparams && this.sshparams.length > 0) {
+                this.command = this.sshparams + ' ' + this.command;
+            }
+
+            this.command += ' --title ' + (this.child.Name).quote();
+                this.command += this.cmdTerm + ' --title ' + (this.child.Name).quote() + ' -H -e ';	    this.command += ' -H -e ' + (this.child.Protocol + " " + this.sshparams_noenv).quote();
+
+            this.command = 'sh -c ' + this.command.quote();
+	    
+        }
+
+        if (this.child.Type == '__app__') {
+
+            if (this.child.Protocol == 'True') {
+                this.command += this.cmdTerm + ' --title ' + (this.child.Name).quote() + ' -H -e ';
+            }
+            this.command += this.child.Host;
+        }
+
+        return this.command;
+
     }
 
 }
