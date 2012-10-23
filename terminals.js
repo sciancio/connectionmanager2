@@ -273,6 +273,7 @@ function LilyTermCommand(terminal) {
     createCmd: function () {
 
         if (this.child.Type == '__item__') {
+
             this._setParams();
 
             this.command += this.cmdTerm;
@@ -282,9 +283,8 @@ function LilyTermCommand(terminal) {
             }
 
             this.command += ' --title ' + (this.child.Name).quote();
-	    this.command += ' -s -H -e ' + (this.child.Protocol + " " + this.sshparams_noenv).quote();
-
-            this.command = 'sh -c ' + this.command.quote();
+	    this.command += ' -s -H -e ' + this.child.Protocol + " " + this.sshparams_noenv;
+            this.command = this.command;
 	    
         }
 
@@ -293,15 +293,19 @@ function LilyTermCommand(terminal) {
             if (this.child.Protocol == 'True') {
                 this.command += this.cmdTerm + ' --title ' + (this.child.Name).quote() + ' -s -H -e ';
             }
+
             this.command += this.child.Host;
+
         }
 
         return this.command;
+
     },
 
     createTabCmd: function () {
 
         if (this.child.Type == '__item__') {
+
             this._setParams();
 
             this.command += this.cmdTerm;
@@ -310,10 +314,9 @@ function LilyTermCommand(terminal) {
                 this.command = this.sshparams + ' ' + this.command;
             }
 
-            this.command += ' --title ' + (this.child.Name).quote();
-                this.command += this.cmdTerm + ' --title ' + (this.child.Name).quote() + ' -H -e ';	    this.command += ' -H -e ' + (this.child.Protocol + " " + this.sshparams_noenv).quote();
-
-            this.command = 'sh -c ' + this.command.quote();
+            // tab renaming on the command line is not supported yet: https://github.com/Tetralet/LilyTerm/issues/22
+	    this.command += ' -H -e ' + this.child.Protocol + " " + this.sshparams_noenv;
+            this.command = this.command;
 	    
         }
 
@@ -322,7 +325,9 @@ function LilyTermCommand(terminal) {
             if (this.child.Protocol == 'True') {
                 this.command += this.cmdTerm + ' --title ' + (this.child.Name).quote() + ' -H -e ';
             }
+
             this.command += this.child.Host;
+
         }
 
         return this.command;
