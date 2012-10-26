@@ -275,26 +275,26 @@ function LilyTermCommand(terminal) {
         if (this.child.Type == '__item__') {
 
             this._setParams();
-
             this.command += this.cmdTerm;
 
-            if (this.sshparams && this.sshparams.length > 0) {
-                this.command = this.sshparams + ' ' + this.command;
-            }
+	    this.command += ' --separate --hold';
+	    this.command += ' --title ' + (this.child.Name).quote();
 
-            this.command += ' --title ' + (this.child.Name).quote();
-	    this.command += ' -s -H -e ' + this.child.Protocol + " " + this.sshparams_noenv;
-            this.command = this.command;
+	    this.command += ' --execute ' + this.child.Protocol + " " + this.sshparams_noenv;
 	    
         }
 
         if (this.child.Type == '__app__') {
 
             if (this.child.Protocol == 'True') {
-                this.command += this.cmdTerm + ' --title ' + (this.child.Name).quote() + ' -s -H -e ';
+
+                this.command += this.cmdTerm;
+		this.command += ' --separate --hold';
+		this.command += ' --title ' + (this.child.Name).quote();
+
             }
 
-            this.command += this.child.Host;
+            this.command += ' --execute ' + this.child.Host;
 
         }
 
@@ -307,26 +307,26 @@ function LilyTermCommand(terminal) {
         if (this.child.Type == '__item__') {
 
             this._setParams();
-
             this.command += this.cmdTerm;
 
-            if (this.sshparams && this.sshparams.length > 0) {
-                this.command = this.sshparams + ' ' + this.command;
-            }
+	    this.command += ' --join --hold';
+	    this.command += ' --tab_names ' + (this.child.Name).quote();
 
-            // tab renaming on the command line is not supported yet: https://github.com/Tetralet/LilyTerm/issues/22
-	    this.command += ' -H -e ' + this.child.Protocol + " " + this.sshparams_noenv;
-            this.command = this.command;
+	    this.command += ' --execute ' + this.child.Protocol + " " + this.sshparams_noenv;
 	    
         }
 
         if (this.child.Type == '__app__') {
 
             if (this.child.Protocol == 'True') {
-                this.command += this.cmdTerm + ' --title ' + (this.child.Name).quote() + ' -H -e ';
+
+                this.command += this.cmdTerm;
+		this.command += ' --join --hold';
+		this.command += ' --tab_names ' + (this.child.Name).quote()
+
             }
 
-            this.command += this.child.Host;
+            this.command += ' --execute ' + this.child.Host;
 
         }
 
