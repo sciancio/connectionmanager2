@@ -37,9 +37,14 @@ import itertools
 import re
 import sys
 
-VERSION = '0.7.4'
+VERSION = '0.7.5'
 
 supportedTerms = ["Gnome Terminal", "Terminator", "Guake"]
+supportedTermsCmd = ["gnome-terminal", "terminator", "guake"]
+supportedTermsSite = ["http://library.gnome.org/users/gnome-terminal/stable/", 
+                      "http://www.tenshu.net/p/terminator.html", 
+                      "http://guake.org/"]
+
 
 # TreeStore object:
 # Type, Name, Host, Profile, Protocol
@@ -186,6 +191,7 @@ class ConnectionManager(Gtk.Window):
 
     tv = Gtk.TreeView()
     bad_path = None
+    terminal_site = Gtk.LinkButton(supportedTermsSite[0], "Visit Terminal Homepage ")
 
     def fixTree(self, model, path, iter, user_data):
         piter = model.iter_parent(iter)
@@ -196,6 +202,25 @@ class ConnectionManager(Gtk.Window):
 
         elif (self.treestore.get_value(iter, 1) != 'Root'):  # Root
             self.bad_path = model.get_path(iter)
+
+    # Check if a program exists
+    def checkProgram(self, program):
+        import os
+        def is_exe(fpath):
+            return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+
+        fpath, fname = os.path.split(program)
+        if fpath:
+            if is_exe(program):
+                return program
+        else:
+            for path in os.environ["PATH"].split(os.pathsep):
+                exe_file = os.path.join(path, program)
+                if is_exe(exe_file):
+                    return True
+
+        return False
+
 
     def checkValidity(self):
         model, iter = self.tv.get_selection().get_selected()
@@ -302,7 +327,7 @@ This involves loss of information, it is recommended to revert it.")
         SpecButtons.add(button6)
         SpecButtons.add(button7)
 
-        ExtButtons = Gtk.HButtonBox(margin_right=15, margin_bottom=6)
+        ExtButtons = Gtk.HButtonBox(margin_right=15, margin_bottom=3, margin_top=3)
         ExtButtons.set_layout(4)
         ExtButtons.add(button8)
         # ButtonBox
@@ -330,13 +355,25 @@ This involves loss of information, it is recommended to revert it.")
         labelTerm = Gtk.Label('Choose your preferred terminal (first check its installation)', halign="start", margin_left=10)
         labelTerm.set_justify(3)
 
-        terms_combo = Gtk.ComboBoxText(halign="start", margin_left=10)
-        terms_combo.set_entry_text_column(0)
+        objectsList = Gtk.TreeStore(str, bool)
+        bExistsTerminal = False
+        for index, terminal in enumerate(supportedTerms):
+            # Check if terminal exists
+            bExistsTerminal = self.checkProgram(supportedTermsCmd[index])
+            objectsList.append(None, [terminal, bExistsTerminal])
+        terms_combo = Gtk.ComboBox.new_with_model(objectsList)
         terms_combo.set_wrap_width(1)
-        for terminal in supportedTerms:
-            terms_combo.append_text(terminal)
+        terms_combo.set_halign(Gtk.Align.START)
+        terms_combo.set_margin_left(10)
+
+        renderer_text = Gtk.CellRendererText()
+        terms_combo.pack_start(renderer_text, True)
+        terms_combo.add_attribute(renderer_text, "text", 0)
+        terms_combo.add_attribute(renderer_text, 'sensitive', 1)
         terms_combo.set_active(GlobalSettings['terminal'])
         terms_combo.connect("changed", self.on_combo_option_toggled, "terminal")
+
+        self.terminal_site.set_uri(supportedTermsSite[GlobalSettings['terminal']])
 
         options = Gtk.VBox(False, spacing=2)
         options.pack_start(labelOpt, False, False, 10)
@@ -344,10 +381,12 @@ This involves loss of information, it is recommended to revert it.")
         options.pack_start(checkOpt2, False, False, 0)
         options.pack_start(labelTerm, False, False, 10)
         options.pack_start(terms_combo, False, False, 0)
+        options.pack_end(self.terminal_site, False, False, 10)
+        
 
         # About Label
         about = Gtk.VBox(False, spacing=2)
-        label_about = Gtk.Label('<span size="30000">ConnectionManager 3</span>\n<span>Version: '+VERSION+'\n\nSimple GUI app for Gnome 3 that provides\n a menu for initiating SSH/Telnet/Custom Apps connections.\n\nCopyright 2011 Stefano Ciancio</span>')
+        label_about = Gtk.Label('<span size="30000">ConnectionManager 3</span>\n<span>Version: '+VERSION+'\n\nSimple GUI app for Gnome 3 that provides\n a menu for initiating SSH/Telnet/Custom Apps connections.\n\nCopyright 2012 Stefano Ciancio</span>')
         label_about.set_justify(2)
         label_about.set_use_markup(True)
         button_about = Gtk.LinkButton("https://github.com/sciancio/connectionmanager", "Visit GitHub Project Homepage")
@@ -429,6 +468,8 @@ This involves loss of information, it is recommended to revert it.")
     def on_combo_option_toggled(self, combo, name):
         global GlobalSettings
         GlobalSettings[name] = combo.get_active()
+        
+        self.terminal_site.set_uri(supportedTermsSite[GlobalSettings['terminal']])
         self.conf_modified()
 
     # Add Host
