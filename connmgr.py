@@ -39,11 +39,12 @@ import sys
 
 VERSION = '0.7.5'
 
-supportedTerms = ["Gnome Terminal", "Terminator", "Guake"]
-supportedTermsCmd = ["gnome-terminal", "terminator", "guake"]
+supportedTerms = ["Gnome Terminal", "Terminator", "Guake", "TMux",]
+supportedTermsCmd = ["gnome-terminal", "terminator", "guake", "tmux"]
 supportedTermsSite = ["http://library.gnome.org/users/gnome-terminal/stable/", 
                       "http://www.tenshu.net/p/terminator.html", 
-                      "http://guake.org/"]
+                      "http://guake.org/", 
+                      "http://tmux.sourceforge.net/"]
 
 
 # TreeStore object:

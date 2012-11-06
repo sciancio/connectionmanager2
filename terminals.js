@@ -17,7 +17,7 @@
 //   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 // Supported terminals. This terminal list must match as in connmgr.py
-const TERMINALS = new Array("gnome-terminal", "terminator", "guake");
+const TERMINALS = new Array("gnome-terminal", "terminator", "guake", "tmux");
 
 
 // ******************************************************
@@ -35,6 +35,9 @@ function TerminalCommand(terminal) {
         case 2:
             this.resClass = new GuakeCommand(terminal);
             break;
+        case 3:
+            this.resClass = new TMuxCommand(terminal);
+            break;
         default:
             this.resClass = new GnomeTerminalCommand(terminal);
             break;
@@ -43,7 +46,7 @@ function TerminalCommand(terminal) {
     return this._init(terminal);
 }
 
-    TerminalCommand.prototype = {
+TerminalCommand.prototype = {
 
     _init: function(terminal) {
 
@@ -104,7 +107,7 @@ function GnomeTerminalCommand(terminal) {
     this._init(terminal);
 }
 
-    GnomeTerminalCommand.prototype = {
+GnomeTerminalCommand.prototype = {
     __proto__: TerminalCommand.prototype,
 
     createCmd: function () {
@@ -180,7 +183,7 @@ function TerminatorCommand(terminal) {
     this._init(terminal);
 }
 
-    TerminatorCommand.prototype = {
+TerminatorCommand.prototype = {
     __proto__: TerminalCommand.prototype,
 
     createCmd: function () {
@@ -217,7 +220,7 @@ function TerminatorCommand(terminal) {
 
         return this.command;
     }
-    }
+}
 
 // ******************************************************
 // Guake class derived from base class
@@ -226,7 +229,7 @@ function GuakeCommand(terminal) {
     this._init(terminal);
 }
 
-    GuakeCommand.prototype = {
+GuakeCommand.prototype = {
     __proto__: TerminalCommand.prototype,
 
     createCmd: function () {
@@ -257,4 +260,42 @@ function GuakeCommand(terminal) {
 
 }
 
+// ******************************************************
+// TMux class derived from base class
+// ******************************************************
+function TMuxCommand(terminal) {
+    this._init(terminal);
+}
 
+TMuxCommand.prototype = {
+    __proto__: TerminalCommand.prototype,
+
+    createCmd: function () {
+
+        if (this.child.Type == '__item__') {
+            this._setParams();
+
+            this.command += this.cmdTerm;
+            this.command += ' new-window -n ' + (this.child.Name).quote();
+            this.command += ' ' + (this.sshparams + this.child.Protocol + " " + this.sshparams_noenv).quote();
+        }
+
+        if (this.child.Type == '__app__') {
+
+            if (this.child.Protocol == 'True') {
+                this.command += this.cmdTerm + ' new-window -n ' + (this.child.Name).quote();
+                this.command += ' ' + (this.child.Host).quote();
+            } else {
+                this.command += this.child.Host;
+            }
+        }
+
+
+//global.log("CM: " + this.command);
+// Main.notifyError("Error reading file", e.message);
+
+
+        return this.command;
+    }
+
+}
