@@ -58,10 +58,12 @@ const SshSearchProvider = new Lang.Class({
 
             let ssh_name = resultId.name;
 
-            metas.push({'id': resultId,
+            metas.push({ 'id': resultId,
                     'name': ssh_name,
-                    'createIcon': function(size) {
-                                    return app.create_icon_texture(size);
+                    'createIcon': function(size) { 
+                                    let icon = null; 
+                                    if (app) icon = app.create_icon_texture(size); 
+                                    return icon;
                                   }
             });
         }
@@ -108,4 +110,5 @@ const SshSearchProvider = new Lang.Class({
     }
 
 });
+
 
