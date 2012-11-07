@@ -39,12 +39,15 @@ import sys
 
 VERSION = '0.7.5'
 
-supportedTerms = ["Gnome Terminal", "Terminator", "Guake", "TMux",]
-supportedTermsCmd = ["gnome-terminal", "terminator", "guake", "tmux"]
+supportedTerms = ["Gnome Terminal", "Terminator", "Guake", "TMux", "urxvt", "urxvt256c"]
+supportedTermsCmd = ["gnome-terminal", "terminator", "guake", "tmux", "urxvt", "urxvt256c"]
 supportedTermsSite = ["http://library.gnome.org/users/gnome-terminal/stable/", 
                       "http://www.tenshu.net/p/terminator.html", 
                       "http://guake.org/", 
-                      "http://tmux.sourceforge.net/"]
+                      "http://tmux.sourceforge.net/",
+                      "http://software.schmorp.de/pkg/rxvt-unicode.html",
+                      "http://software.schmorp.de/pkg/rxvt-unicode.html"
+                      ]
 
 
 # TreeStore object:
