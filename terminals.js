@@ -19,7 +19,7 @@
 // Supported terminals. This terminal list must match as in connmgr.py
 const TERMINALS = new Array(
     "gnome-terminal", "terminator", "guake", "tmux",
-    "urxvt", "urxvt256c");
+    "urxvt", "urxvt256c", "lilyterm");
 
 
 // ******************************************************
@@ -45,6 +45,9 @@ function TerminalCommand(terminal) {
             break;
         case 5:
             this.resClass = new URXVT256cCommand(terminal);
+            break;
+        case 6:
+            this.resClass = new LilyTermCommand(terminal);
             break;
         default:
             this.resClass = new GnomeTerminalCommand(terminal);
@@ -359,4 +362,49 @@ URXVT256cCommand.prototype = {
     __proto__: URXVTCommand.prototype
 
 }
+
+
+// ******************************************************
+// LilyTerm class derived from base class
+// ******************************************************
+function LilyTermCommand(terminal) {
+    this._init(terminal);
+}
+
+LilyTermCommand.prototype = {
+    __proto__: TerminalCommand.prototype,
+
+    createCmd: function () {
+
+        if (this.child.Type == '__item__') {
+            this._setParams();
+
+            this.command += this.cmdTerm;
+
+            if (this.sshparams && this.sshparams.length > 0) {
+                this.command = this.sshparams + ' ' + this.command;
+            }
+
+            this.command += ' --title ' + (this.child.Name).quote();
+            this.command += ' -s -e ' + ("sh -c " + (this.child.Protocol + " " + this.sshparams_noenv).quote());
+
+            this.command = 'sh -c ' + this.command.quote();
+
+        }
+
+        if (this.child.Type == '__app__') {
+
+            if (this.child.Protocol == 'True') {
+                this.command += this.cmdTerm + ' --title ' + (this.child.Name).quote() + ' -s -e ';
+                this.command += (this.child.Host).quote();
+            } else {
+                this.command += this.child.Host;
+            }
+        }
+
+        return this.command;
+    },
+
+}
+
 
