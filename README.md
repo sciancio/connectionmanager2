@@ -14,7 +14,7 @@ Some screenshot
 
 ![CM Preferences](http://i.imgur.com/kC64i.png)
 
-![CM Search](http://i.imgur.com/osOI4.jpg)
+![CM Search](http://i.imgur.com/VOfHQ.png)
 
 
 Why
