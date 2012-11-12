@@ -10,7 +10,7 @@ What it looks like?
 
 Some screenshot
 
-![CM extension](http://i.imgur.com/XHu3a.png)
+![CM extension](http://i.imgur.com/W3PjE.png)
 
 ![CM Preferences](http://i.imgur.com/kC64i.png)
 
