@@ -36,45 +36,46 @@ const SshSearchProvider = new Lang.Class({
         this.sshNames = sshNames;
     },
 
-    getResultMetas: function(resultIds) {
-
-        let metas = [];
-        
-        for (let i = 0; i < resultIds.length; i++) {
-        
-            let resultId = resultIds[i];
-
-            let appSys = Shell.AppSystem.get_default();
-            let app = appSys.lookup_app('gnome-session-properties.desktop');
-
-            switch (resultId.type) {
-            case '__app__':
-                app = appSys.lookup_app('gnome-session-properties.desktop');
-                break;
-            case '__item__':
-                app = appSys.lookup_app(resultId.terminal + '.desktop');
-                break;
-            }
-
-            let ssh_name = resultId.name;
-
-            metas.push({ 'id': resultId,
-                    'name': ssh_name,
-                    'createIcon': function(size) { 
-                                    let icon = null; 
-                                    if (app) icon = app.create_icon_texture(size); 
-                                    return icon;
-                                  }
-            });
+    getResultMetas: function(resultIds, callback) {
+        let metas = resultIds.map(this.getResultMeta, this);
+        try {
+            callback(metas);
+        } finally {
+            return metas;
         }
         return metas;
+    },
+
+    getResultMeta: function(resultId) {
+        let appSys = Shell.AppSystem.get_default();
+        let app = appSys.lookup_app('gnome-session-properties.desktop');
+        
+        switch (resultId.type) {
+        case '__app__':
+            app = appSys.lookup_app('gnome-session-properties.desktop');
+            break;
+        case '__item__':
+            app = appSys.lookup_app(resultId.terminal + '.desktop');
+            break;
+        }
+
+        let ssh_name = resultId.name;
+
+        return { 'id': resultId,
+                'name': ssh_name,
+                'createIcon': function(size) { 
+                                let icon = null; 
+                                if (app) icon = app.create_icon_texture(size); 
+                                return icon;
+                              }
+        };
     },
 
     activateResult: function(id) {
         Util.spawnCommandLine(id.command);
     },
 
-    getInitialResultSet: function(terms) {
+    _getResultSet: function(sessions, terms) {
         // check if a found host-name begins like the search-term
         let searchResults = [];
 
@@ -98,15 +99,16 @@ const SshSearchProvider = new Lang.Class({
             }
         }
 
-        if (searchResults.length > 0) {
-            return(searchResults);
-        }
+       this.searchSystem.pushResults(this, searchResults);
 
-        return []
+    },
+
+    getInitialResultSet: function(terms) {
+        return this._getResultSet(this._sessions, terms);
     },
 
     getSubsearchResultSet: function(previousResults, terms) {
-        return this.getInitialResultSet(terms);
+        return this._getResultSet(this._sessions, terms);
     }
 
 });

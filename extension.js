@@ -36,25 +36,26 @@ const Util = imports.misc.util;
 const Gettext = imports.gettext.domain('gnome-shell-extensions');
 const _ = Gettext.gettext;
 
+let extensionPath;
 
 // Import Command Terminal Manager and Search class
 const CM = imports.misc.extensionUtils.getCurrentExtension();
 const Search = CM.imports.search;
 const Terminals = CM.imports.terminals;
 
-function ConnectionManager(metadata) {
-    this._init.apply(this, arguments);
-}
 
-ConnectionManager.prototype = {
-    __proto__: PanelMenu.SystemStatusButton.prototype,
+const ConnectionManager = new Lang.Class({
+    Name: 'ConnectionManager',
+    Extends: PanelMenu.SystemStatusButton,
 
-    _init: function(metadata) {
+    _init: function() {
+
+        this.parent('emblem-cm-symbolic');
 
         let CMPrefs = CM.metadata;
 
         this._configFile = GLib.build_filenamev([GLib.get_home_dir(), CMPrefs['sw_config']]);
-        this._prefFile = GLib.build_filenamev([metadata.path, CMPrefs['sw_bin']]) + " " + metadata.path;
+        this._prefFile = GLib.build_filenamev([extensionPath, CMPrefs['sw_bin']]) + " " + extensionPath;
 
         // Search provider
         this._searchProvider = null;
@@ -62,15 +63,7 @@ ConnectionManager.prototype = {
         this._searchProvider = new Search.SshSearchProvider;
         Main.overview.addSearchProvider(this._searchProvider);
 
-        PanelMenu.SystemStatusButton.prototype._init.call(this, '', 'Connection Manager');
-
         this._readConf();
-
-        // Icon
-        let icon_file = GLib.build_filenamev([metadata.path, "emblem-cm-symbolic.svg"]);
-        this._CMlogo = Gio.icon_new_for_string(icon_file);
-        this.setGIcon(this._CMlogo);
-        this.actor.set_size(40, 26);
 
     },
 
@@ -141,7 +134,6 @@ ConnectionManager.prototype = {
 
                     menuItem = new PopupMenu.PopupMenuItem(ident+child.Name);
                     icon = new St.Icon({icon_name: 'terminal',
-                            icon_type: St.IconType.FULLCOLOR,
                             style_class: 'connmgr-icon' });
                     menuItem.addActor(icon, { align: St.Align.END});
 
@@ -180,7 +172,6 @@ ConnectionManager.prototype = {
 
                     menuItem = new PopupMenu.PopupMenuItem(ident+child.Name);
                     icon = new St.Icon({icon_name: 'gtk-execute',
-                            icon_type: St.IconType.FULLCOLOR,
                             style_class: 'connmgr-icon' });
                     menuItem.addActor(icon, { align: St.Align.END});
 
@@ -224,7 +215,6 @@ ConnectionManager.prototype = {
 
                     menuSub = new PopupMenu.PopupSubMenuMenuItem(ident+child.Name);
                     icon = new St.Icon({icon_name: 'folder',
-                            icon_type: St.IconType.FULLCOLOR,
                             style_class: 'connmgr-icon' });
                     menuSub.addActor(icon, { align: St.Align.END});
 
@@ -242,7 +232,6 @@ ConnectionManager.prototype = {
             if (( this._menu_open_windows) && (this.TermCmd.supportWindows()) ){
                 menuItemAll = new PopupMenu.PopupMenuItem(ident+"Open all windows");
                 iconAll = new St.Icon({icon_name: 'fileopen',
-                                icon_type: St.IconType.FULLCOLOR,
                                 style_class: 'connmgr-icon' });
                 menuItemAll.addActor(iconAll, { align: St.Align.END});
                 parent.menu.addMenuItem(menuItemAll, position);
@@ -257,7 +246,6 @@ ConnectionManager.prototype = {
             if ( (this._menu_open_tabs) && (this.TermCmd.supportTabs()) ) {
                 menuItemTabs = new PopupMenu.PopupMenuItem(ident+"Open all as tabs");
                 iconTabs = new St.Icon({icon_name: 'fileopen',
-                                icon_type: St.IconType.FULLCOLOR,
                                 style_class: 'connmgr-icon' });
                 menuItemTabs.addActor(iconTabs, { align: St.Align.END});
                 parent.menu.addMenuItem(menuItemTabs, position);
@@ -284,32 +272,31 @@ ConnectionManager.prototype = {
         ident = ident_prec;
     },
 
-    enable: function() {
-        let _children = Main.panel._rightBox.get_children();
-        Main.panel._rightBox.insert_child_at_index(this.actor, _children.length - 2);
-        Main.panel._rightBox.child_set(this.actor, {y_fill : true } );
-        Main.panel._menus.addMenu(this.menu);
-
-        let file = Gio.file_new_for_path(this._configFile);
-        this.monitor = file.monitor(Gio.FileMonitorFlags.NONE, null);
-        this.monitor.connect('changed', Lang.bind(this, this._readConf));
-
-    },
-
-    disable: function() {
-        Main.panel._menus.removeMenu(this.menu);
-        Main.panel._rightBox.remove_child(this.actor);
-
-        Main.overview.removeSearchProvider(this._searchProvider);
-        this._searchProvider = null;
-
-        this.monitor.cancel();
-    },
-
-};
+});
 
 
-function init(metadata) {
-    return new ConnectionManager(metadata);
+let cm;
+
+function enable() {
+    cm = new ConnectionManager();
+    
+    let _children = Main.panel._rightBox.get_children();
+    Main.panel.addToStatusArea("connectionmanager", cm, _children.length - 2, "right");
+    
+    let file = Gio.file_new_for_path(cm._configFile);
+    cm.monitor = file.monitor(Gio.FileMonitorFlags.NONE, null);
+    cm.monitor.connect('changed', Lang.bind(cm, cm._readConf));
+}
+
+function disable() {
+    cm.destroy();
+}
+
+function init(extensionMeta) {
+    extensionPath = extensionMeta.path;
+    
+    let theme = imports.gi.Gtk.IconTheme.get_default();
+    theme.append_search_path(extensionPath);
+
 }
 
