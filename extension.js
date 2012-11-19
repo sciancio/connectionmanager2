@@ -280,8 +280,8 @@ let cm;
 function enable() {
     cm = new ConnectionManager();
     
-    let _children = Main.panel._rightBox.get_children();
-    Main.panel.addToStatusArea("connectionmanager", cm, _children.length - 2, "right");
+    let _children_length = Main.panel._rightBox.get_n_children();
+    Main.panel.addToStatusArea("connectionmanager", cm, _children_length - 2, "right");
     
     let file = Gio.file_new_for_path(cm._configFile);
     cm.monitor = file.monitor(Gio.FileMonitorFlags.NONE, null);
