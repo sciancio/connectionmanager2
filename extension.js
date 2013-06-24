@@ -58,7 +58,6 @@ const ConnectionManager = new Lang.Class({
         this._prefFile = GLib.build_filenamev([extensionPath, CMPrefs['sw_bin']]) + " " + extensionPath;
 
         // Search provider
-        this._searchProvider = null;
         this._sshList = [];
         this._searchProvider = new Search.SshSearchProvider;
         Main.overview.addSearchProvider(this._searchProvider);
@@ -289,6 +288,7 @@ function enable() {
 }
 
 function disable() {
+    Main.overview.removeSearchProvider(cm._searchProvider);
     cm.destroy();
 }
 

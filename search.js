@@ -17,17 +17,14 @@
 //   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 const Shell = imports.gi.Shell;
-const Search = imports.ui.search;
 const Util = imports.misc.util;
 const Lang = imports.lang;
 
 // SSH / Apps Search Provider
 const SshSearchProvider = new Lang.Class({
     Name: 'SshSearchProvider',
-    Extends: Search.SearchProvider,
 
     _init: function() {
-        Search.SearchProvider.prototype._init.call(this, "CONNECTION MANAGER");
         this.sshNames = [];
     },
 
