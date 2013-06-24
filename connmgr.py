@@ -25,10 +25,9 @@ from gi.repository import GObject
 if hasattr(GObject, "set_prgname"):
     GObject.set_prgname('Connection Manager')
 
-from gi.repository import Gtk, Gdk
+from gi.repository import Gtk, Gdk, Gio
 from StringIO import StringIO
 
-import gconf
 import os.path
 import shutil
 import json
@@ -37,7 +36,7 @@ import itertools
 import re
 import sys
 
-VERSION = '0.8'
+VERSION = '0.8.1'
 
 supportedTerms = ["Gnome Terminal", "Terminator", "Guake", "TMux", "urxvt", "urxvt256c", "LilyTerm"]
 supportedTermsCmd = ["gnome-terminal", "terminator", "guake", "tmux", "urxvt", "urxvt256c", "lilyterm"]
@@ -698,19 +697,23 @@ This involves loss of information, it is recommended to revert it.")
         # Profile Combo ----------------------------
         label3 = Gtk.Label("Profile")
 
-        # GConf key for retrieving a list of terminal profiles.
-        GnomeTermProfiles = "/apps/gnome-terminal/global/profile_list"
-        # GConf key template to get visible name for a profile.
-        GnomeTermProfName = "/apps/gnome-terminal/profiles/%s/visible_name"
+        # DConf schema id, path for retrieving a list of terminal profiles
+        GnomeTermProfilesSchemaId  = "org.gnome.Terminal.SettingsList"
+        GnomeTermProfilesPath = "/org/gnome/terminal/legacy/profiles:/"
+        # DConf schema id, path to get visible name for a profile.
+        GnomeTermProfileSchemaId = "org.gnome.Terminal.Legacy.Profile"
+        GnomeTermProfilePath = "/org/gnome/terminal/legacy/profiles:/:"
 
-        client = gconf.client_get_default()
-        names = client.get_list(GnomeTermProfiles, 1)
+        # Retry a list of terminal profiles
+        TerminalSettings = Gio.Settings.new_with_path(GnomeTermProfilesSchemaId, GnomeTermProfilesPath)
+        profilesList = TerminalSettings.get_value("list")
 
-        entry3 = Gtk.ComboBoxText()
-        for index, item in enumerate(names):
-            profile = client.get_string(GnomeTermProfName.replace('%s', item))
-            entry3.append_text(profile)
-            if profile.decode('utf-8') == row[3]:
+        for index, item in enumerate(profilesList):
+            profile = Gio.Settings.new_with_path(GnomeTermProfileSchemaId, GnomeTermProfilePath+item+"/")
+            profileName = profile.get_string("visible-name")
+
+            entry3.append_text(profileName)
+            if profileName.decode('utf-8') == row[3]:
                 entry3.set_active(index)
 
         entry3.set_entry_text_column(0)

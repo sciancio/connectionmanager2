@@ -60,7 +60,7 @@ const ConnectionManager = new Lang.Class({
         // Search provider
         this._searchProvider = null;
         this._sshList = [];
-        this._searchProvider = new Search.SshSearchProvider;
+        this._searchProvider = new Search.SshSearchProvider('CONNECTION MANAGER');
         Main.overview.addSearchProvider(this._searchProvider);
 
         this._readConf();

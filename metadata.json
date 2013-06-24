@@ -1,6 +1,6 @@
 {
-    "shell-version": ["3.6","3.7.1"],
-    "version": "0.8",
+    "shell-version": ["3.8"],
+    "version": "0.8.1",
     "uuid": "connectionmanager@ciancio.net",
     "name": "Connection Manager",
     "description": "Simple GUI app for Gnome 3 that provides a menu for initiating SSH/Telnet/Custom Apps connections.",

@@ -26,8 +26,8 @@ const SshSearchProvider = new Lang.Class({
     Name: 'SshSearchProvider',
     Extends: Search.SearchProvider,
 
-    _init: function() {
-        Search.SearchProvider.prototype._init.call(this, "CONNECTION MANAGER");
+    _init: function(title) {
+        this.title = title;
         this.sshNames = [];
     },
 
