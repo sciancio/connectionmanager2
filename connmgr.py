@@ -708,6 +708,7 @@ This involves loss of information, it is recommended to revert it.")
         TerminalSettings = Gio.Settings.new_with_path(GnomeTermProfilesSchemaId, GnomeTermProfilesPath)
         profilesList = TerminalSettings.get_value("list")
 
+        entry3 = Gtk.ComboBoxText()
         for index, item in enumerate(profilesList):
             profile = Gio.Settings.new_with_path(GnomeTermProfileSchemaId, GnomeTermProfilePath+item+"/")
             profileName = profile.get_string("visible-name")

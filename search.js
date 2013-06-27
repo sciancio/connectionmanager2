@@ -17,14 +17,12 @@
 //   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 const Shell = imports.gi.Shell;
-const Search = imports.ui.search;
 const Util = imports.misc.util;
 const Lang = imports.lang;
 
 // SSH / Apps Search Provider
 const SshSearchProvider = new Lang.Class({
     Name: 'SshSearchProvider',
-    Extends: Search.SearchProvider,
 
     _init: function(title) {
         this.title = title;
@@ -36,79 +34,67 @@ const SshSearchProvider = new Lang.Class({
         this.sshNames = sshNames;
     },
 
-    getResultMetas: function(resultIds, callback) {
-        let metas = resultIds.map(this.getResultMeta, this);
-        try {
-            callback(metas);
-        } finally {
-            return metas;
+    getInitialResultSet: function(terms) {
+        let searching = [];
+
+        for (var i=0; i<this.sshNames.length; i++) {
+            for (var j=0; j<terms.length; j++) {
+                let pattern = new RegExp(terms[j],"gi");
+                if (this.sshNames[i][2].match(pattern)) {
+                    searching.push ({
+                            'type': this.sshNames[i][0],
+                            'terminal': this.sshNames[i][1],
+                            'name': this.sshNames[i][2],
+                            'command': this.sshNames[i][3]
+                    });
         }
-        return metas;
+            }
+        }
+
+        this.searchSystem.pushResults(this, searching);
     },
 
-    getResultMeta: function(resultId) {
+    getSubsearchResultSet: function(previousResults, terms) {
+        this.getInitialResultSet(terms);
+    },
+
+    getResultMetas: function(resultIds, callback) {
+        let metas = [];
+
+        for (let i=0; i<resultIds.length; i++) {
         let appSys = Shell.AppSystem.get_default();
         let app = appSys.lookup_app('gnome-session-properties.desktop');
         
-        switch (resultId.type) {
+            switch (resultIds[i].type) {
         case '__app__':
             app = appSys.lookup_app('gnome-session-properties.desktop');
             break;
         case '__item__':
-            app = appSys.lookup_app(resultId.terminal + '.desktop');
+                app = appSys.lookup_app(resultIds[i].terminal + '.desktop');
             break;
         }
 
-        let ssh_name = resultId.name;
-
-        return { 'id': resultId,
-                'name': ssh_name,
+            metas.push( {
+                'id': resultIds[i].command,
+                'name': resultIds[i].name,
                 'createIcon': function(size) { 
                                 let icon = null; 
                                 if (app) icon = app.create_icon_texture(size); 
                                 return icon;
                               }
-        };
-    },
-
-    activateResult: function(id) {
-        Util.spawnCommandLine(id.command);
-    },
-
-    _getResultSet: function(sessions, terms) {
-        // check if a found host-name begins like the search-term
-        let searchResults = [];
-
-        for (var i=0; i<this.sshNames.length; i++) {
-            for (var j=0; j<terms.length; j++) {
-                try {
-                    let pattern = new RegExp(terms[j],"gi");
-                    if (this.sshNames[i][2].match(pattern)) {
-
-                        searchResults.push({
-                                'type': this.sshNames[i][0],
-                                'terminal': this.sshNames[i][1],
-                                'name': this.sshNames[i][2],
-                                'command': this.sshNames[i][3]
                         });
-                    }
-                }
-                catch(ex) {
-                    continue;
-                }
-            }
         }
 
-       this.searchSystem.pushResults(this, searchResults);
+        callback(metas);
 
     },
 
-    getInitialResultSet: function(terms) {
-        return this._getResultSet(this._sessions, terms);
+    activateResult: function(command) {
+        Util.spawnCommandLine(command);
     },
 
-    getSubsearchResultSet: function(previousResults, terms) {
-        return this._getResultSet(this._sessions, terms);
+    createResultActor: function (resultMeta, terms) {
+        return null;
     }
 
 });
