@@ -4,7 +4,7 @@
     "uuid": "connectionmanager@ciancio.net",
     "name": "Connection Manager",
     "description": "Simple GUI app for Gnome 3 that provides a menu for initiating SSH/Telnet/Custom Apps connections.",
-    "url": "https://github.com/sciancio/connectionmanager",
+    "url": "https://github.com/sciancio/connectionmanager2",
     "original-authors": "Stefano Ciancio",
     "sw_bin": "connmgr.py",
     "sw_config": ".connmgr"
