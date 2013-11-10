@@ -36,7 +36,7 @@ import itertools
 import re
 import sys
 
-VERSION = '0.8.1'
+VERSION = '0.8.2'
 
 supportedTerms = ["Gnome Terminal", "Terminator", "Guake", "TMux", "urxvt", "urxvt256c", "LilyTerm"]
 supportedTermsCmd = ["gnome-terminal", "terminator", "guake", "tmux", "urxvt", "urxvt256c", "lilyterm"]
@@ -478,7 +478,7 @@ This involves loss of information, it is recommended to revert it.")
 
     # Add Host
     def on_click_me_addhost(self, button):
-        newrow = ['__item__', 'New Host ...', '-AX ...', 'Default', 'ssh']
+        newrow = ['__item__', 'New Host ...', '-AX ...', 'Unnamed', 'ssh']
         self.__addElement(newrow)
 
     # Add App
@@ -646,7 +646,7 @@ This involves loss of information, it is recommended to revert it.")
 
                 if importedHost != '*':
                     treestore.append(import_iter, ['__item__',
-                        importedHost, importedHostname, 'Default', 'ssh'])
+                        importedHost, importedHostname, 'Unnamed', 'ssh'])
 
     def is_folder(self, iter):
         if self.treestore.get_value(iter, 0) == '__folder__':
@@ -696,21 +696,15 @@ This involves loss of information, it is recommended to revert it.")
 
         # Profile Combo ----------------------------
         label3 = Gtk.Label("Profile")
+        
+        profilesList = Gio.Settings.new("org.gnome.Terminal.ProfilesList").get_value("list")
 
-        # DConf schema id, path for retrieving a list of terminal profiles
-        GnomeTermProfilesSchemaId  = "org.gnome.Terminal.SettingsList"
-        GnomeTermProfilesPath = "/org/gnome/terminal/legacy/profiles:/"
-        # DConf schema id, path to get visible name for a profile.
-        GnomeTermProfileSchemaId = "org.gnome.Terminal.Legacy.Profile"
-        GnomeTermProfilePath = "/org/gnome/terminal/legacy/profiles:/:"
-
-        # Retry a list of terminal profiles
-        TerminalSettings = Gio.Settings.new_with_path(GnomeTermProfilesSchemaId, GnomeTermProfilesPath)
-        profilesList = TerminalSettings.get_value("list")
+        Gio.Settings.new("org.gnome.Terminal.ProfilesList").get_value("list")
 
         entry3 = Gtk.ComboBoxText()
         for index, item in enumerate(profilesList):
-            profile = Gio.Settings.new_with_path(GnomeTermProfileSchemaId, GnomeTermProfilePath+item+"/")
+            profile = Gio.Settings.new_with_path("org.gnome.Terminal.Legacy.Profile",
+                                                 "/org/gnome/terminal/legacy/profiles:/:"+item+"/")
             profileName = profile.get_string("visible-name")
 
             entry3.append_text(profileName)

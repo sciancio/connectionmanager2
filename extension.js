@@ -46,11 +46,22 @@ const Terminals = CM.imports.terminals;
 
 const ConnectionManager = new Lang.Class({
     Name: 'ConnectionManager',
-    Extends: PanelMenu.SystemStatusButton,
+    Extends: PanelMenu.Button,
 
     _init: function() {
 
-        this.parent('emblem-cm-symbolic');
+        this.parent(0.0, "Connnection Manager");
+
+        this._box = new St.BoxLayout();
+
+        this._icon = new St.Icon({ gicon: Gio.icon_new_for_string('emblem-cm-symbolic'),
+                                             icon_size: 15 });
+
+        this._bin = new St.Bin({child: this._icon});
+
+        this._box.add(this._bin);
+        this.actor.add_actor(this._box);
+        this.actor.add_style_class_name('panel-status-button');
 
         let CMPrefs = CM.metadata;
 
@@ -135,7 +146,7 @@ const ConnectionManager = new Lang.Class({
                     menuItem = new PopupMenu.PopupMenuItem(ident+child.Name);
                     icon = new St.Icon({icon_name: 'terminal',
                             style_class: 'connmgr-icon' });
-                    menuItem.addActor(icon, { align: St.Align.END});
+                    menuItem.actor.add(icon, { align: St.Align.END});
 
                     // For each command ...
                     this.TermCmd.resetEnv();
@@ -173,7 +184,7 @@ const ConnectionManager = new Lang.Class({
                     menuItem = new PopupMenu.PopupMenuItem(ident+child.Name);
                     icon = new St.Icon({icon_name: 'gtk-execute',
                             style_class: 'connmgr-icon' });
-                    menuItem.addActor(icon, { align: St.Align.END});
+                    menuItem.actor.add(icon, { align: St.Align.END});
 
                     // For each command ...
                     this.TermCmd.resetEnv();
@@ -216,7 +227,7 @@ const ConnectionManager = new Lang.Class({
                     menuSub = new PopupMenu.PopupSubMenuMenuItem(ident+child.Name);
                     icon = new St.Icon({icon_name: 'folder',
                             style_class: 'connmgr-icon' });
-                    menuSub.addActor(icon, { align: St.Align.END});
+                    menuSub.actor.add(icon, { align: St.Align.END});
 
                     parent.menu.addMenuItem(menuSub);
                     ident_prec = ident;
@@ -233,7 +244,7 @@ const ConnectionManager = new Lang.Class({
                 menuItemAll = new PopupMenu.PopupMenuItem(ident+"Open all windows");
                 iconAll = new St.Icon({icon_name: 'fileopen',
                                 style_class: 'connmgr-icon' });
-                menuItemAll.addActor(iconAll, { align: St.Align.END});
+                menuItemAll.actor.add(iconAll, { align: St.Align.END});
                 parent.menu.addMenuItem(menuItemAll, position);
                 position += 1;
                 menuItemAll.connect('activate', function() { 
@@ -247,7 +258,7 @@ const ConnectionManager = new Lang.Class({
                 menuItemTabs = new PopupMenu.PopupMenuItem(ident+"Open all as tabs");
                 iconTabs = new St.Icon({icon_name: 'fileopen',
                                 style_class: 'connmgr-icon' });
-                menuItemTabs.addActor(iconTabs, { align: St.Align.END});
+                menuItemTabs.actor.add(iconTabs, { align: St.Align.END});
                 parent.menu.addMenuItem(menuItemTabs, position);
                 position += 1;
 
@@ -289,6 +300,7 @@ function enable() {
 }
 
 function disable() {
+    cm.cancel();
     cm.destroy();
 }
 
