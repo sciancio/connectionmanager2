@@ -18,12 +18,12 @@
 #   License along with this library; if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-from gi.repository import GObject
+from gi.repository import GLib
 
 # Set program name for gnome shell (before importing gtk, which seems to
 # call set_prgname on its own)
-if hasattr(GObject, "set_prgname"):
-    GObject.set_prgname('Connection Manager')
+if hasattr(GLib, "set_prgname"):
+    GLib.set_prgname('Connection Manager')
 
 from gi.repository import Gtk, Gdk, Gio
 from StringIO import StringIO
@@ -246,7 +246,7 @@ This involves loss of information, it is recommended to revert it.")
                 return False
 
     def drag_drop_cb(self, treeview, dragcontext, x, y, time):
-        GObject.timeout_add(50, self.checkValidity)
+        GLib.timeout_add(50, self.checkValidity)
 
     ## ------------------------------------------------------
 

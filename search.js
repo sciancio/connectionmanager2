@@ -20,18 +20,29 @@ const Shell = imports.gi.Shell;
 const Util = imports.misc.util;
 const Lang = imports.lang;
 
+const Config = imports.misc.config;
+
 // SSH / Apps Search Provider
 const SshSearchProvider = new Lang.Class({
     Name: 'SshSearchProvider',
 
     _init: function(title) {
         this.title = title;
+        this.searchSystem = null;
         this.sshNames = [];
     },
 
     // Update list of SSH/Apps on configuration changes
     _update: function (sshNames) {
         this.sshNames = sshNames;
+    },
+
+    filterResults: function(providerResults, maxResults) {
+        return providerResults;
+    },
+
+    createResultObject: function(result, terms) {
+        return null;
     },
 
     getInitialResultSet: function(terms) {
@@ -47,11 +58,11 @@ const SshSearchProvider = new Lang.Class({
                             'name': this.sshNames[i][2],
                             'command': this.sshNames[i][3]
                     });
-        }
+                }
             }
         }
 
-        this.searchSystem.pushResults(this, searching);
+        this.searchSystem.setResults(this, searching);
     },
 
     getSubsearchResultSet: function(previousResults, terms) {
