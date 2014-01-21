@@ -50,7 +50,7 @@ const ConnectionManager = new Lang.Class({
 
     _init: function() {
 
-        this.parent(0.0, "Connnection Manager");
+        this.parent(1.0, "Connection Manager", false);
 
         this._box = new St.BoxLayout();
 
@@ -75,12 +75,18 @@ const ConnectionManager = new Lang.Class({
         Main.overview.addSearchProvider(this._searchProvider);
 
         this._readConf();
-
     },
+
 
     _readConf: function () {
 
         this.menu.removeAll();
+
+        // Rewrite _setOpenedSubMenu method to correctly open submenu
+        this.menu._setOpenedSubMenu = Lang.bind(this, function (submenu) {
+            this._openedSubMenu = submenu;
+        });
+        
         this._sshList = [];
 
         if (GLib.file_test(this._configFile, GLib.FileTest.EXISTS) ) {
@@ -123,13 +129,13 @@ const ConnectionManager = new Lang.Class({
         this.menu.addMenuItem(menuPref, this.menu.length+1);
 
         // Update ssh name list
-        this._searchProvider._update(this._sshList);
+        this._searchProvider._update(this._sshList);        
     },
 
 
     _readTree: function(node, parent, ident) {
 
-        let child, menuItem, menuSep, menuSub, icon, 
+        let child, menuItem, menuSep, menuSub, icon, label,
             menuItemAll, iconAll, menuSepAll, menuItemTabs, iconTabs, ident_prec;
         let childHasItem = false, commandAll = new Array(), commandTab = new Array(), 
             sshparamsTab = new Array(), itemnr = 0;
@@ -138,15 +144,20 @@ const ConnectionManager = new Lang.Class({
         for (let i = 0; i < node.length; i++) {
             child = node[i][0];
             let command;
-
+            
             if (child.hasOwnProperty('Type')) {
 
+                // Simple Item
                 if (child.Type == '__item__') {
 
-                    menuItem = new PopupMenu.PopupMenuItem(ident+child.Name);
+                    menuItem = new PopupMenu.PopupBaseMenuItem();
+                    
                     icon = new St.Icon({icon_name: 'terminal',
                             style_class: 'connmgr-icon' });
-                    menuItem.actor.add(icon, { align: St.Align.END});
+                    menuItem.actor.add_child(icon);
+                    
+                    label = new St.Label({ text: ident+child.Name });
+                    menuItem.actor.add_child(label);
 
                     // For each command ...
                     this.TermCmd.resetEnv();
@@ -179,12 +190,16 @@ const ConnectionManager = new Lang.Class({
                     );
                 }
 
+                // Application Item
                 if (child.Type == '__app__') {
 
-                    menuItem = new PopupMenu.PopupMenuItem(ident+child.Name);
+                    menuItem = new PopupMenu.PopupBaseMenuItem();
                     icon = new St.Icon({icon_name: 'gtk-execute',
                             style_class: 'connmgr-icon' });
-                    menuItem.actor.add(icon, { align: St.Align.END});
+                    menuItem.actor.add_child(icon);
+
+                    label = new St.Label({ text: ident+child.Name });
+                    menuItem.actor.add_child(label);
 
                     // For each command ...
                     this.TermCmd.resetEnv();
@@ -217,19 +232,17 @@ const ConnectionManager = new Lang.Class({
                     );
                 }
 
-
+                // Separator
                 if (child.Type == '__sep__') {
-                    menuSep = new PopupMenu.PopupSeparatorMenuItem();
-                    parent.menu.addMenuItem(menuSep, i);
+                    parent.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem(), i);
                 }
+                
+                // Folder
                 if (child.Type == '__folder__') {
 
                     menuSub = new PopupMenu.PopupSubMenuMenuItem(ident+child.Name);
-                    icon = new St.Icon({icon_name: 'folder',
-                            style_class: 'connmgr-icon' });
-                    menuSub.actor.add(icon, { align: St.Align.END});
-
                     parent.menu.addMenuItem(menuSub);
+                    
                     ident_prec = ident;
                     this._readTree(child.Children, menuSub, ident+"  ");
 
@@ -241,10 +254,14 @@ const ConnectionManager = new Lang.Class({
         if (childHasItem) {
 
             if (( this._menu_open_windows) && (this.TermCmd.supportWindows()) ){
-                menuItemAll = new PopupMenu.PopupMenuItem(ident+"Open all windows");
+                menuItemAll = new PopupMenu.PopupBaseMenuItem();
                 iconAll = new St.Icon({icon_name: 'fileopen',
                                 style_class: 'connmgr-icon' });
-                menuItemAll.actor.add(iconAll, { align: St.Align.END});
+                menuItemAll.actor.add_child(iconAll);
+
+                label = new St.Label({ text: ident+"Open all windows" });
+                menuItemAll.actor.add_child(label);
+                
                 parent.menu.addMenuItem(menuItemAll, position);
                 position += 1;
                 menuItemAll.connect('activate', function() { 
@@ -255,10 +272,14 @@ const ConnectionManager = new Lang.Class({
             }
 
             if ( (this._menu_open_tabs) && (this.TermCmd.supportTabs()) ) {
-                menuItemTabs = new PopupMenu.PopupMenuItem(ident+"Open all as tabs");
+                menuItemTabs = new PopupMenu.PopupBaseMenuItem();
                 iconTabs = new St.Icon({icon_name: 'fileopen',
                                 style_class: 'connmgr-icon' });
-                menuItemTabs.actor.add(iconTabs, { align: St.Align.END});
+                menuItemTabs.actor.add_child(iconTabs);
+
+                label = new St.Label({ text: ident+"Open all as tabs" });
+                menuItemTabs.actor.add_child(label);
+
                 parent.menu.addMenuItem(menuItemTabs, position);
                 position += 1;
 
@@ -300,7 +321,12 @@ function enable() {
 }
 
 function disable() {
-    cm.cancel();
+
+    if(cm._searchProvider!=null) {
+        Main.overview.removeSearchProvider(cm._searchProvider);
+        cm._searchProvider = null;
+    }
+    cm.monitor.cancel();
     cm.destroy();
 }
 
