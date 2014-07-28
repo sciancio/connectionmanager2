@@ -72,7 +72,12 @@ const ConnectionManager = new Lang.Class({
         this._searchProvider = null;
         this._sshList = [];
         this._searchProvider = new Search.SshSearchProvider('CONNECTION MANAGER');
-        Main.overview.addSearchProvider(this._searchProvider);
+        if(typeof Main.overview.viewSelector === "object" &&
+           typeof Main.overview.viewSelector._searchResults === "object" &&
+           typeof Main.overview.viewSelector._searchResults._searchSystem === "object" &&
+           typeof Main.overview.viewSelector._searchResults._searchSystem.addProvider === "function") {
+            Main.overview.viewSelector._searchResults._searchSystem.addProvider(this._searchProvider);
+        }
 
         this._readConf();
     },
@@ -181,12 +186,12 @@ const ConnectionManager = new Lang.Class({
 
                     // Add ssh entry in search array
                     this._sshList.push(
-                        [
-                            child.Type,
-                            this.TermCmd.get_terminal(),
-                            child.Name+' - '+child.Host, 
-                            command
-                        ]
+                        {
+                            'type': child.Type,
+                            'terminal': this.TermCmd.get_terminal(),
+                            'name': child.Name+' - '+child.Host, 
+                            'command': command
+                        }
                     );
                 }
 
@@ -223,12 +228,12 @@ const ConnectionManager = new Lang.Class({
 
                     // Add ssh entry in search array
                     this._sshList.push(
-                        [
-                            child.Type, 
-                            this.TermCmd.get_terminal(),
-                            child.Name+' - '+child.Host, 
-                            command
-                        ]
+                        {
+                            'type': child.Type,
+                            'terminal': this.TermCmd.get_terminal(),
+                            'name': child.Name+' - '+child.Host, 
+                            'command': command
+                        }
                     );
                 }
 
