@@ -711,6 +711,8 @@ This involves loss of information, it is recommended to revert it.")
                 entry3.append_text(profileName)
                 if profileName.decode('utf-8') == row[3]:
                     entry3.set_active(index)
+        else:
+            entry3.append_text("----")
 
         entry3.set_entry_text_column(0)
         # ----------------------------
