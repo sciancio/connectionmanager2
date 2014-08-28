@@ -26,9 +26,9 @@ Since moving to Fedora 15 and Gnome Shell, I’ve missed the [sshmenu](http://ss
 How to install
 ========================
 
-Copy the tarball to $HOME/.local/share/gnome-shell/extensions
-and unpack it. A directory called connectionmanager@ciancio.net
-should be created. 
+Download the zip file to $HOME/.local/share/gnome-shell/extensions
+and unpack it. A directory called connectionmanager2-master should 
+be created. Rename it to connectionmanager2@ciancio.net.
 
 For use by all users, install in /usr/share/gnome-shell/extensions.
 
@@ -41,7 +41,7 @@ particular version of the GNOME Shell. If this does not fix
 the problem, use Looking Glass (Alt-F2 lg) to see what the
 error message is.
 
-You can also install from [Gnome Shell Extension site](https://extensions.gnome.org/extension/45/connection-manager/)
+You can also install from [Gnome Shell Extension site](https://extensions.gnome.org/extension/699/connection-manager/)
 
 Current Version
 ========================
@@ -54,7 +54,7 @@ Other Info
 You can find other info: 
 
 * [GitHub wiki](https://github.com/sciancio/connectionmanager/wiki)
-* [Gnome Shell Extension](https://extensions.gnome.org/extension/45/connection-manager/)
+* [Gnome Shell Extension](https://extensions.gnome.org/extension/699/connection-manager/)
 * [GitHub](https://github.com/sciancio/connectionmanager)
 * [License](https://github.com/sciancio/connectionmanager/wiki/License)
 
