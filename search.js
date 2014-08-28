@@ -27,8 +27,7 @@ const SshSearchProvider = new Lang.Class({
     Name: 'SshSearchProvider',
 
     _init: function(title) {
-        this.title = title;
-        this.searchSystem = null;
+        this.id = title;
         this.sshNames = [];
     },
 
@@ -45,69 +44,57 @@ const SshSearchProvider = new Lang.Class({
         return null;
     },
 
-    getInitialResultSet: function(terms) {
+    getInitialResultSet: function(terms, callback) {
         let searching = [];
 
         for (var i=0; i<this.sshNames.length; i++) {
             for (var j=0; j<terms.length; j++) {
                 let pattern = new RegExp(terms[j],"gi");
-                if (this.sshNames[i][2].match(pattern)) {
-                    searching.push ({
-                            'type': this.sshNames[i][0],
-                            'terminal': this.sshNames[i][1],
-                            'name': this.sshNames[i][2],
-                            'command': this.sshNames[i][3]
-                    });
+                if (this.sshNames[i].name.match(pattern)) {
+                    searching.push(i);
                 }
             }
         }
 
-        this.searchSystem.setResults(this, searching);
+        if (typeof callback === "function") {
+            callback(searching);
+        }
     },
 
-    getSubsearchResultSet: function(previousResults, terms) {
-        this.getInitialResultSet(terms);
+    getSubsearchResultSet: function(previousResults, terms, callback) {
+        this.getInitialResultSet(terms, callback);
     },
 
     getResultMetas: function(resultIds, callback) {
         let metas = [];
 
         for (let i=0; i<resultIds.length; i++) {
-        let appSys = Shell.AppSystem.get_default();
-        let app = appSys.lookup_app('gnome-session-properties.desktop');
-        
-            switch (resultIds[i].type) {
-        case '__app__':
-            app = appSys.lookup_app('gnome-session-properties.desktop');
-            break;
-        case '__item__':
-                app = appSys.lookup_app(resultIds[i].terminal + '.desktop');
-            break;
-        }
+            let result = this.sshNames[resultIds[i]]
+            let appSys = Shell.AppSystem.get_default();
+            switch (result.type) {
+                case '__app__':
+                    app = appSys.lookup_app('gnome-session-properties.desktop');
+                    break;
+                case '__item__':
+                    app = appSys.lookup_app(result.terminal + '.desktop');
+                    break;
+            }
 
-            metas.push( {
-                'id': resultIds[i].command,
-                'name': resultIds[i].name,
+            metas.push({
+                'id': resultIds[i],
+                'name': result.name,
                 'createIcon': function(size) { 
-                                let icon = null; 
-                                if (app) icon = app.create_icon_texture(size); 
-                                return icon;
-                              }
-                        });
+                    let icon = null; 
+                    if (app) icon = app.create_icon_texture(size); 
+                    return icon;
+                }
+            });
         }
 
         callback(metas);
-
     },
 
-    activateResult: function(command) {
-        Util.spawnCommandLine(command);
+    activateResult: function(id) {
+        Util.spawnCommandLine(this.sshNames[id].command);
     },
-
-    createResultActor: function (resultMeta, terms) {
-        return null;
-    }
-
 });
-
-
