@@ -697,19 +697,24 @@ This involves loss of information, it is recommended to revert it.")
         # Profile Combo ----------------------------
         label3 = Gtk.Label("Profile")
         
-        profilesList = Gio.Settings.new("org.gnome.Terminal.ProfilesList").get_value("list")
-
-        Gio.Settings.new("org.gnome.Terminal.ProfilesList").get_value("list")
-
         entry3 = Gtk.ComboBoxText()
-        for index, item in enumerate(profilesList):
-            profile = Gio.Settings.new_with_path("org.gnome.Terminal.Legacy.Profile",
-                                                 "/org/gnome/terminal/legacy/profiles:/:"+item+"/")
-            profileName = profile.get_string("visible-name")
+        
+        if "org.gnome.Terminal.ProfilesList" in Gio.Settings.list_schemas():
+            profilesList = Gio.Settings.new("org.gnome.Terminal.ProfilesList").get_value("list")
 
-            entry3.append_text(profileName)
-            if profileName.decode('utf-8') == row[3]:
-                entry3.set_active(index)
+            Gio.Settings.new("org.gnome.Terminal.ProfilesList").get_value("list")
+
+            for index, item in enumerate(profilesList):
+                profile = Gio.Settings.new_with_path("org.gnome.Terminal.Legacy.Profile",
+                                                     "/org/gnome/terminal/legacy/profiles:/:"+item+"/")
+                profileName = profile.get_string("visible-name")
+
+                entry3.append_text(profileName)
+                if profileName.decode('utf-8') == row[3]:
+                    entry3.set_active(index)
+
+        else:
+            entry3.append_text("Profiles Not Available")
 
         entry3.set_entry_text_column(0)
         # ----------------------------
