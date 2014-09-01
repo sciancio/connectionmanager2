@@ -393,7 +393,7 @@ This involves loss of information, it is recommended to revert it.")
         label_about = Gtk.Label('<span size="30000">ConnectionManager 3</span>\n<span>Version: '+VERSION+'\n\nSimple GUI app for Gnome 3 that provides\n a menu for initiating SSH/Telnet/Custom Apps connections.\n\nCopyright 2012-2014 Stefano Ciancio</span>')
         label_about.set_justify(2)
         label_about.set_use_markup(True)
-        button_about = Gtk.LinkButton("https://github.com/sciancio/connectionmanager", "Visit GitHub Project Homepage")
+        button_about = Gtk.LinkButton("https://github.com/sciancio/connectionmanager2", "Visit GitHub Project Homepage")
         about.pack_start(label_about, False, False, 10)
         about.pack_start(button_about, False, False, 10)
 
