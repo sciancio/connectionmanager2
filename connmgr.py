@@ -36,7 +36,7 @@ import itertools
 import re
 import sys
 
-VERSION = '0.8.2'
+VERSION = '0.8.3'
 
 supportedTerms = ["Gnome Terminal", "Terminator", "Guake", "TMux", "urxvt", "urxvt256c", "LilyTerm"]
 supportedTermsCmd = ["gnome-terminal", "terminator", "guake", "tmux", "urxvt", "urxvt256c", "lilyterm"]
@@ -390,7 +390,7 @@ This involves loss of information, it is recommended to revert it.")
 
         # About Label
         about = Gtk.VBox(False, spacing=2)
-        label_about = Gtk.Label('<span size="30000">ConnectionManager 3</span>\n<span>Version: '+VERSION+'\n\nSimple GUI app for Gnome 3 that provides\n a menu for initiating SSH/Telnet/Custom Apps connections.\n\nCopyright 2012 Stefano Ciancio</span>')
+        label_about = Gtk.Label('<span size="30000">ConnectionManager 3</span>\n<span>Version: '+VERSION+'\n\nSimple GUI app for Gnome 3 that provides\n a menu for initiating SSH/Telnet/Custom Apps connections.\n\nCopyright 2012-2014 Stefano Ciancio</span>')
         label_about.set_justify(2)
         label_about.set_use_markup(True)
         button_about = Gtk.LinkButton("https://github.com/sciancio/connectionmanager", "Visit GitHub Project Homepage")
