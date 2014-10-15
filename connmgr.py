@@ -36,7 +36,7 @@ import itertools
 import re
 import sys
 
-VERSION = '0.8.2'
+VERSION = '0.8.3'
 
 supportedTerms = ["Gnome Terminal", "Terminator", "Guake", "TMux", "urxvt", "urxvt256c", "LilyTerm"]
 supportedTermsCmd = ["gnome-terminal", "terminator", "guake", "tmux", "urxvt", "urxvt256c", "lilyterm"]
@@ -390,10 +390,10 @@ This involves loss of information, it is recommended to revert it.")
 
         # About Label
         about = Gtk.VBox(False, spacing=2)
-        label_about = Gtk.Label('<span size="30000">ConnectionManager 3</span>\n<span>Version: '+VERSION+'\n\nSimple GUI app for Gnome 3 that provides\n a menu for initiating SSH/Telnet/Custom Apps connections.\n\nCopyright 2012 Stefano Ciancio</span>')
+        label_about = Gtk.Label('<span size="30000">ConnectionManager 3</span>\n<span>Version: '+VERSION+'\n\nSimple GUI app for Gnome 3 that provides\n a menu for initiating SSH/Telnet/Custom Apps connections.\n\nCopyright 2012-2014 Stefano Ciancio</span>')
         label_about.set_justify(2)
         label_about.set_use_markup(True)
-        button_about = Gtk.LinkButton("https://github.com/sciancio/connectionmanager", "Visit GitHub Project Homepage")
+        button_about = Gtk.LinkButton("https://github.com/sciancio/connectionmanager2", "Visit GitHub Project Homepage")
         about.pack_start(label_about, False, False, 10)
         about.pack_start(button_about, False, False, 10)
 
@@ -697,19 +697,24 @@ This involves loss of information, it is recommended to revert it.")
         # Profile Combo ----------------------------
         label3 = Gtk.Label("Profile")
         
-        profilesList = Gio.Settings.new("org.gnome.Terminal.ProfilesList").get_value("list")
-
-        Gio.Settings.new("org.gnome.Terminal.ProfilesList").get_value("list")
-
         entry3 = Gtk.ComboBoxText()
-        for index, item in enumerate(profilesList):
-            profile = Gio.Settings.new_with_path("org.gnome.Terminal.Legacy.Profile",
-                                                 "/org/gnome/terminal/legacy/profiles:/:"+item+"/")
-            profileName = profile.get_string("visible-name")
+        
+        if "org.gnome.Terminal.ProfilesList" in Gio.Settings.list_schemas():
+            profilesList = Gio.Settings.new("org.gnome.Terminal.ProfilesList").get_value("list")
 
-            entry3.append_text(profileName)
-            if profileName.decode('utf-8') == row[3]:
-                entry3.set_active(index)
+            Gio.Settings.new("org.gnome.Terminal.ProfilesList").get_value("list")
+
+            for index, item in enumerate(profilesList):
+                profile = Gio.Settings.new_with_path("org.gnome.Terminal.Legacy.Profile",
+                                                     "/org/gnome/terminal/legacy/profiles:/:"+item+"/")
+                profileName = profile.get_string("visible-name")
+
+                entry3.append_text(profileName)
+                if profileName.decode('utf-8') == row[3]:
+                    entry3.set_active(index)
+
+        else:
+            entry3.append_text("Profiles Not Available")
 
         entry3.set_entry_text_column(0)
         # ----------------------------

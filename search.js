@@ -16,6 +16,9 @@
 //   License along with this library; if not, write to the Free Software
 //   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+const St = imports.gi.St;
+const Gio = imports.gi.Gio;
+
 const Shell = imports.gi.Shell;
 const Util = imports.misc.util;
 const Lang = imports.lang;
@@ -67,13 +70,16 @@ const SshSearchProvider = new Lang.Class({
 
     getResultMetas: function(resultIds, callback) {
         let metas = [];
+        let app = null;
 
         for (let i=0; i<resultIds.length; i++) {
             let result = this.sshNames[resultIds[i]]
             let appSys = Shell.AppSystem.get_default();
+            let app = null;
+
             switch (result.type) {
                 case '__app__':
-                    app = appSys.lookup_app('gnome-session-properties.desktop');
+                    app = null;
                     break;
                 case '__item__':
                     app = appSys.lookup_app(result.terminal + '.desktop');
@@ -83,12 +89,19 @@ const SshSearchProvider = new Lang.Class({
             metas.push({
                 'id': resultIds[i],
                 'name': result.name,
-                'createIcon': function(size) { 
-                    let icon = null; 
-                    if (app) icon = app.create_icon_texture(size); 
+                'createIcon': function(size) {
+                    let icon = null;
+                    let appt = app;
+
+                    if (app)
+                        icon = app.create_icon_texture(size);
+                    else
+                        icon = new St.Icon({ gicon: Gio.icon_new_for_string('emblem-cm-symbolic'),
+                                             icon_size: size });
+                    
                     return icon;
                 }
-            });
+            })
         }
 
         callback(metas);

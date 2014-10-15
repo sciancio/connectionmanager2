@@ -72,12 +72,13 @@ const ConnectionManager = new Lang.Class({
         this._searchProvider = null;
         this._sshList = [];
         this._searchProvider = new Search.SshSearchProvider('CONNECTION MANAGER');
-        if(typeof Main.overview.viewSelector === "object" &&
-           typeof Main.overview.viewSelector._searchResults === "object" &&
-           typeof Main.overview.viewSelector._searchResults._searchSystem === "object" &&
-           typeof Main.overview.viewSelector._searchResults._searchSystem.addProvider === "function") {
-            Main.overview.viewSelector._searchResults._searchSystem.addProvider(this._searchProvider);
-        }
+
+        if( typeof Main.overview.viewSelector === "object" &&
+            typeof Main.overview.viewSelector._searchResults === "object" &&
+            typeof Main.overview.viewSelector._searchResults._searchSystem === "object" &&
+            typeof Main.overview.viewSelector._searchResults._searchSystem.addProvider === "function") {
+                Main.overview.viewSelector._searchResults._searchSystem.addProvider(this._searchProvider);
+        }    
 
         this._readConf();
     },
@@ -189,7 +190,7 @@ const ConnectionManager = new Lang.Class({
                         {
                             'type': child.Type,
                             'terminal': this.TermCmd.get_terminal(),
-                            'name': child.Name+' - '+child.Host, 
+                            'name': child.Name+' - '+child.Host,
                             'command': command
                         }
                     );
@@ -231,9 +232,10 @@ const ConnectionManager = new Lang.Class({
                         {
                             'type': child.Type,
                             'terminal': this.TermCmd.get_terminal(),
-                            'name': child.Name+' - '+child.Host, 
+                            'name': child.Name+' - '+child.Host,
                             'command': command
                         }
+
                     );
                 }
 
@@ -326,11 +328,6 @@ function enable() {
 }
 
 function disable() {
-
-    if(cm._searchProvider!=null) {
-        Main.overview.removeSearchProvider(cm._searchProvider);
-        cm._searchProvider = null;
-    }
     cm.monitor.cancel();
     cm.destroy();
 }
