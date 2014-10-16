@@ -331,6 +331,11 @@ function enable() {
 }
 
 function disable() {
+    if(cm._searchProvider!=null) {
+        Main.overview.removeSearchProvider(cm._searchProvider);
+        cm._searchProvider = null;
+    }
+
     cm.monitor.cancel();
     cm.destroy();
 }
