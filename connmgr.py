@@ -36,19 +36,19 @@ import itertools
 import re
 import sys
 
-VERSION = '0.8.3'
+VERSION = '0.8.4'
 
-supportedTerms = ["Gnome Terminal", "Terminator", "Guake", "TMux", "urxvt", "urxvt256c", "LilyTerm"]
-supportedTermsCmd = ["gnome-terminal", "terminator", "guake", "tmux", "urxvt", "urxvt256c", "lilyterm"]
-supportedTermsSite = ["http://library.gnome.org/users/gnome-terminal/stable/", 
-                      "http://www.tenshu.net/p/terminator.html", 
-                      "http://guake.org/", 
+supportedTerms = ["Gnome Terminal", "Terminator", "Guake", "TMux", "urxvt", "urxvt256c", "LilyTerm", "Mate Terminal"]
+supportedTermsCmd = ["gnome-terminal", "terminator", "guake", "tmux", "urxvt", "urxvt256c", "lilyterm", "mate-terminal"]
+supportedTermsSite = ["http://library.gnome.org/users/gnome-terminal/stable/",
+                      "http://www.tenshu.net/p/terminator.html",
+                      "http://guake.org/",
                       "http://tmux.sourceforge.net/",
                       "http://software.schmorp.de/pkg/rxvt-unicode.html",
                       "http://software.schmorp.de/pkg/rxvt-unicode.html",
-                      "http://lilyterm.luna.com.tw/index.html"
+                      "http://lilyterm.luna.com.tw/index.html",
+                      "http://www.mate-desktop.org/"
                       ]
-
 
 # TreeStore object:
 # Type, Name, Host, Profile, Protocol
