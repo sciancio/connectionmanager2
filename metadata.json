@@ -1,5 +1,5 @@
 {
-    "shell-version": ["3.12", "3.14"],
+    "shell-version": ["3.12", "3.14", "3.16"],
     "version": "0.8.4",
     "uuid": "connectionmanager2@ciancio.net",
     "name": "Connection Manager",
