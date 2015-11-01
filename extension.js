@@ -74,11 +74,14 @@ const ConnectionManager = new Lang.Class({
         this._searchProvider = new Search.SshSearchProvider('CONNECTION MANAGER');
 
         if( typeof Main.overview.viewSelector === "object" &&
-            typeof Main.overview.viewSelector._searchResults === "object" &&
-            typeof Main.overview.viewSelector._searchResults._searchSystem === "object" &&
-            typeof Main.overview.viewSelector._searchResults._searchSystem.addProvider === "function") {
+            typeof Main.overview.viewSelector._searchResults === "object") {
+            if(typeof Main.overview.viewSelector._searchResults._registerProvider === "function") { //3.14
+                Main.overview.viewSelector._searchResults._registerProvider(this._searchProvider);
+            } else if(typeof Main.overview.viewSelector._searchResults._searchSystem === "object" &&
+                      typeof Main.overview.viewSelector._searchResults._searchSystem.addProvider === "function") { //3.12
                 Main.overview.viewSelector._searchResults._searchSystem.addProvider(this._searchProvider);
-        }    
+            }
+        }
 
         this._readConf();
     },
@@ -328,6 +331,11 @@ function enable() {
 }
 
 function disable() {
+    if(cm._searchProvider!=null) {
+        Main.overview.removeSearchProvider(cm._searchProvider);
+        cm._searchProvider = null;
+    }
+
     cm.monitor.cancel();
     cm.destroy();
 }
