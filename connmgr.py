@@ -38,8 +38,8 @@ import sys
 
 VERSION = '0.8.4'
 
-supportedTerms = ["Gnome Terminal", "Terminator", "Guake", "TMux", "urxvt", "urxvt256c", "LilyTerm", "Mate Terminal"]
-supportedTermsCmd = ["gnome-terminal", "terminator", "guake", "tmux", "urxvt", "urxvt256c", "lilyterm", "mate-terminal"]
+supportedTerms = ["Gnome Terminal", "Terminator", "Guake", "TMux", "urxvt", "urxvt256c", "LilyTerm", "Mate Terminal", "XFCE terminal"]
+supportedTermsCmd = ["gnome-terminal", "terminator", "guake", "tmux", "urxvt", "urxvt256c", "lilyterm", "mate-terminal", "xfce4-terminal"]
 supportedTermsSite = ["http://library.gnome.org/users/gnome-terminal/stable/",
                       "http://www.tenshu.net/p/terminator.html",
                       "http://guake.org/",
@@ -47,7 +47,8 @@ supportedTermsSite = ["http://library.gnome.org/users/gnome-terminal/stable/",
                       "http://software.schmorp.de/pkg/rxvt-unicode.html",
                       "http://software.schmorp.de/pkg/rxvt-unicode.html",
                       "http://lilyterm.luna.com.tw/index.html",
-                      "http://www.mate-desktop.org/"
+                      "http://www.mate-desktop.org/",
+                      "http://www.xfce.org/"
                       ]
 
 # TreeStore object:

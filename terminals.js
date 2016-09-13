@@ -19,7 +19,7 @@
 // Supported terminals. This terminal list must match as in connmgr.py
 const TERMINALS = new Array(
     "gnome-terminal", "terminator", "guake", "tmux",
-    "urxvt", "urxvt256c", "lilyterm", "mate-terminal");
+    "urxvt", "urxvt256c", "lilyterm", "mate-terminal", "xfce4-terminal");
 
 
 // ******************************************************
