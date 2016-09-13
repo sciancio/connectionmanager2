@@ -36,7 +36,7 @@ import itertools
 import re
 import sys
 
-VERSION = '0.8.4'
+VERSION = '0.8.5'
 
 supportedTerms = ["Gnome Terminal", "Terminator", "Guake", "TMux", "urxvt", "urxvt256c", "LilyTerm", "Mate Terminal", "XFCE terminal"]
 supportedTermsCmd = ["gnome-terminal", "terminator", "guake", "tmux", "urxvt", "urxvt256c", "lilyterm", "mate-terminal", "xfce4-terminal"]
