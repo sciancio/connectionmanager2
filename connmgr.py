@@ -38,8 +38,8 @@ import sys
 
 VERSION = '0.8.5'
 
-supportedTerms = ["Gnome Terminal", "Terminator", "Guake", "TMux", "urxvt", "urxvt256c", "LilyTerm", "Mate Terminal", "XFCE terminal"]
-supportedTermsCmd = ["gnome-terminal", "terminator", "guake", "tmux", "urxvt", "urxvt256c", "lilyterm", "mate-terminal", "xfce4-terminal"]
+supportedTerms = ["Gnome Terminal", "Terminator", "Guake", "TMux", "urxvt", "urxvt256c", "LilyTerm", "Mate Terminal", "XFCE terminal", "Terminix"]
+supportedTermsCmd = ["gnome-terminal", "terminator", "guake", "tmux", "urxvt", "urxvt256c", "lilyterm", "mate-terminal", "xfce4-terminal", "terminix"]
 supportedTermsSite = ["http://library.gnome.org/users/gnome-terminal/stable/",
                       "http://www.tenshu.net/p/terminator.html",
                       "http://guake.org/",
@@ -49,6 +49,7 @@ supportedTermsSite = ["http://library.gnome.org/users/gnome-terminal/stable/",
                       "http://lilyterm.luna.com.tw/index.html",
                       "http://www.mate-desktop.org/",
                       "http://www.xfce.org/"
+                      "https://github.com/gnunn1/terminix"
                       ]
 
 # TreeStore object:
@@ -387,7 +388,7 @@ This involves loss of information, it is recommended to revert it.")
         options.pack_start(labelTerm, False, False, 10)
         options.pack_start(terms_combo, False, False, 0)
         options.pack_end(self.terminal_site, False, False, 10)
-        
+
 
         # About Label
         about = Gtk.VBox(False, spacing=2)
@@ -473,7 +474,7 @@ This involves loss of information, it is recommended to revert it.")
     def on_combo_option_toggled(self, combo, name):
         global GlobalSettings
         GlobalSettings[name] = combo.get_active()
-        
+
         self.terminal_site.set_uri(supportedTermsSite[GlobalSettings['terminal']])
         self.conf_modified()
 
@@ -570,7 +571,7 @@ This involves loss of information, it is recommended to revert it.")
                     import_iter = iter
 
                 iter = model.iter_next(iter)
-                
+
         else:
             import_found = False
 
@@ -683,9 +684,9 @@ This involves loss of information, it is recommended to revert it.")
 
         # Profile Combo ----------------------------
         label3 = Gtk.Label("Profile")
-        
+
         entry3 = Gtk.ComboBoxText()
-        
+
         if "org.gnome.Terminal.ProfilesList" in Gio.Settings.list_schemas():
             profilesList = Gio.Settings.new("org.gnome.Terminal.ProfilesList").get_value("list")
 

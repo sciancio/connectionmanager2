@@ -1,5 +1,5 @@
-//   ConnectionManager 3 - Simple GUI app for Gnome 3 that provides a menu 
-//   for initiating SSH/Telnet/Custom Apps connections. 
+//   ConnectionManager 3 - Simple GUI app for Gnome 3 that provides a menu
+//   for initiating SSH/Telnet/Custom Apps connections.
 //   Copyright (C) 2011  Stefano Ciancio
 //
 //   This library is free software; you can redistribute it and/or
@@ -19,7 +19,7 @@
 // Supported terminals. This terminal list must match as in connmgr.py
 const TERMINALS = new Array(
     "gnome-terminal", "terminator", "guake", "tmux",
-    "urxvt", "urxvt256c", "lilyterm", "mate-terminal", "xfce4-terminal");
+    "urxvt", "urxvt256c", "lilyterm", "mate-terminal", "xfce4-terminal", "terminix");
 
 
 // ******************************************************
@@ -49,6 +49,9 @@ function TerminalCommand(terminal) {
         case 6:
             this.resClass = new LilyTermCommand(terminal);
             break;
+        case 7:
+            this.resClass = new TerminixCommand(terminal);
+            break;    
         default:
             this.resClass = new GnomeTerminalCommand(terminal);
             break;
@@ -166,7 +169,7 @@ GnomeTerminalCommand.prototype = {
             if (this.child.Profile && this.child.Profile.length > 0) {
                 this.command += ' --tab-with-profile=' + (this.child.Profile).quote();
             }
-            else 
+            else
             {
                 this.command = ' --tab ';
             }
@@ -408,3 +411,45 @@ LilyTermCommand.prototype = {
 }
 
 
+// ******************************************************
+// TerminixTerm class derived from base class
+// ******************************************************
+function TerminixCommand(terminal) {
+    this._init(terminal);
+}
+
+TerminixCommand.prototype = {
+    __proto__: TerminalCommand.prototype,
+
+    createCmd: function () {
+
+        if (this.child.Type == '__item__') {
+            this._setParams();
+
+            this.command += this.cmdTerm;
+
+            if (this.sshparams && this.sshparams.length > 0) {
+                this.command = this.sshparams + ' ' + this.command;
+            }
+
+            this.command += ' --title ' + (this.child.Name).quote();
+            this.command += ' -e ' + (this.child.Protocol + " " + this.sshparams_noenv).quote();
+
+            this.command = 'sh -c ' + this.command.quote();
+
+        }
+
+        if (this.child.Type == '__app__') {
+
+            if (this.child.Protocol == 'True') {
+                this.command += this.cmdTerm + ' --title ' + (this.child.Name).quote() + ' -e ';
+                this.command += (this.child.Host).quote();
+            } else {
+                this.command += this.child.Host;
+            }
+        }
+
+        return this.command;
+    },
+
+}
