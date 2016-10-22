@@ -48,7 +48,7 @@ supportedTermsSite = ["http://library.gnome.org/users/gnome-terminal/stable/",
                       "http://software.schmorp.de/pkg/rxvt-unicode.html",
                       "http://lilyterm.luna.com.tw/index.html",
                       "http://www.mate-desktop.org/",
-                      "http://www.xfce.org/"
+                      "http://www.xfce.org/",
                       "https://github.com/gnunn1/terminix"
                       ]
 
