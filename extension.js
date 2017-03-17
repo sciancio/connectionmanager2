@@ -303,7 +303,7 @@ const ConnectionManager = new Lang.Class({
                         mycommand += commandTab[c]+' ';
                     }
 
-                    Util.spawnCommandLine(' sh -c '+(sshparamsTab[0]+' '+term+' '+mycommand).quote()+' &');
+                    Util.spawnCommandLine(' sh -c '+JSON.stringify(sshparamsTab[0]+' '+term+' '+mycommand)+' &');
                 });
             }
 
