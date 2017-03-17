@@ -36,19 +36,21 @@ import itertools
 import re
 import sys
 
-VERSION = '0.8.3'
+VERSION = '0.8.5'
 
-supportedTerms = ["Gnome Terminal", "Terminator", "Guake", "TMux", "urxvt", "urxvt256c", "LilyTerm"]
-supportedTermsCmd = ["gnome-terminal", "terminator", "guake", "tmux", "urxvt", "urxvt256c", "lilyterm"]
-supportedTermsSite = ["http://library.gnome.org/users/gnome-terminal/stable/", 
-                      "http://www.tenshu.net/p/terminator.html", 
-                      "http://guake.org/", 
+supportedTerms = ["Gnome Terminal", "Terminator", "Guake", "TMux", "urxvt", "urxvt256c", "LilyTerm", "Mate Terminal", "XFCE terminal", "Terminix"]
+supportedTermsCmd = ["gnome-terminal", "terminator", "guake", "tmux", "urxvt", "urxvt256c", "lilyterm", "mate-terminal", "xfce4-terminal", "terminix"]
+supportedTermsSite = ["http://library.gnome.org/users/gnome-terminal/stable/",
+                      "http://www.tenshu.net/p/terminator.html",
+                      "http://guake.org/",
                       "http://tmux.sourceforge.net/",
                       "http://software.schmorp.de/pkg/rxvt-unicode.html",
                       "http://software.schmorp.de/pkg/rxvt-unicode.html",
-                      "http://lilyterm.luna.com.tw/index.html"
+                      "http://lilyterm.luna.com.tw/index.html",
+                      "http://www.mate-desktop.org/",
+                      "http://www.xfce.org/",
+                      "https://github.com/gnunn1/terminix"
                       ]
-
 
 # TreeStore object:
 # Type, Name, Host, Profile, Protocol
@@ -386,7 +388,7 @@ This involves loss of information, it is recommended to revert it.")
         options.pack_start(labelTerm, False, False, 10)
         options.pack_start(terms_combo, False, False, 0)
         options.pack_end(self.terminal_site, False, False, 10)
-        
+
 
         # About Label
         about = Gtk.VBox(False, spacing=2)
@@ -472,7 +474,7 @@ This involves loss of information, it is recommended to revert it.")
     def on_combo_option_toggled(self, combo, name):
         global GlobalSettings
         GlobalSettings[name] = combo.get_active()
-        
+
         self.terminal_site.set_uri(supportedTermsSite[GlobalSettings['terminal']])
         self.conf_modified()
 
@@ -569,7 +571,7 @@ This involves loss of information, it is recommended to revert it.")
                     import_iter = iter
 
                 iter = model.iter_next(iter)
-                
+
         else:
             import_found = False
 
@@ -625,28 +627,14 @@ This involves loss of information, it is recommended to revert it.")
         lines = [line.strip() for line in file(SSH_CONFIG_FILE)]
         comments_removed = [remove_comment(line) for line in lines]
         blanks_removed = [line for line in comments_removed if line]
+        non_hosts_removed = [line for line in blanks_removed if a_host(line)]
 
-        block = itertools.groupby(blanks_removed, not_a_host)
-
-        first_block = False
-        for key, group in block:
-            Info = dict([line.split(None, 1) for line in group])
-
-            if (not key):
-                if (not first_block):
-                                        first_block = True
-                importedHost = Info['Host']
-            if (key and first_block):
-                if 'HostName' in Info:
-                                        importedHostname = Info['HostName']
-                if 'User' in Info:
-                                        importedHostname = Info['User']+'@'+importedHostname
-                if 'Port' in Info:
-                                        importedHostname = '-p '+Info['Port']+' '+importedHostname
-
+        for line in non_hosts_removed:
+            importedHosts = line.split(None)[1:]
+            for importedHost in importedHosts:
                 if importedHost != '*':
                     treestore.append(import_iter, ['__item__',
-                        importedHost, importedHostname, 'Unnamed', 'ssh'])
+                        importedHost, importedHost, 'Unnamed', 'ssh'])
 
     def is_folder(self, iter):
         if self.treestore.get_value(iter, 0) == '__folder__':
@@ -696,9 +684,9 @@ This involves loss of information, it is recommended to revert it.")
 
         # Profile Combo ----------------------------
         label3 = Gtk.Label("Profile")
-        
+
         entry3 = Gtk.ComboBoxText()
-        
+
         if "org.gnome.Terminal.ProfilesList" in Gio.Settings.list_schemas():
             profilesList = Gio.Settings.new("org.gnome.Terminal.ProfilesList").get_value("list")
 
