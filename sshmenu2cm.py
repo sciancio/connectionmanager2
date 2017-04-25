@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 #
 #   ConnectionManager 3 - a simple script to convert SSHMenu configuration file 
 #   to a CM configuration file.
