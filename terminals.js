@@ -255,7 +255,7 @@ GuakeCommand.prototype = {
             this.command += this.cmdTerm;
 
             this.command += ' --new-tab=' + JSON.stringify(this.child.Name);
-            this.command += ' --rename-tab=' + JSON.stringify(this.child.Name);
+            this.command += ' --rename-current-tab=' + JSON.stringify(this.child.Name);
             this.command += ' -e ' + JSON.stringify(this.sshparams +" sh -c " + JSON.stringify(this.child.Protocol + " " + this.sshparams_noenv));
 
         }
@@ -263,7 +263,7 @@ GuakeCommand.prototype = {
         if (this.child.Type == '__app__') {
 
             if (this.child.Protocol == 'True') {
-                this.command += this.cmdTerm + '  --rename-tab=' + JSON.stringify(this.child.Name)  + ' --new-tab=' + JSON.stringify(this.child.Name) + ' -e ';
+                this.command += this.cmdTerm + '  --rename-current-tab=' + JSON.stringify(this.child.Name)  + ' --new-tab=' + JSON.stringify(this.child.Name) + ' -e ';
                 this.command += JSON.stringify(this.child.Host);
             } else {
                 this.command += this.child.Host;
