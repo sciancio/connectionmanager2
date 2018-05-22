@@ -54,7 +54,8 @@ const SshSearchProvider = new Lang.Class({
             for (var j=0; j<terms.length; j++) {
                 let pattern = new RegExp(terms[j],"gi");
                 if (this.sshNames[i].name.match(pattern)) {
-                    searching.push(i);
+                    // +1 because id 0 breaks search results
+                    searching.push(i+1);
                 }
             }
         }
@@ -73,7 +74,7 @@ const SshSearchProvider = new Lang.Class({
         let app = null;
 
         for (let i=0; i<resultIds.length; i++) {
-            let result = this.sshNames[resultIds[i]]
+            let result = this.sshNames[resultIds[i]-1]
             let appSys = Shell.AppSystem.get_default();
             let app = null;
 
@@ -98,7 +99,7 @@ const SshSearchProvider = new Lang.Class({
                     else
                         icon = new St.Icon({ gicon: Gio.icon_new_for_string('emblem-cm-symbolic'),
                                              icon_size: size });
-                    
+
                     return icon;
                 }
             })
@@ -108,6 +109,6 @@ const SshSearchProvider = new Lang.Class({
     },
 
     activateResult: function(id) {
-        Util.spawnCommandLine(this.sshNames[id].command);
+        Util.spawnCommandLine(this.sshNames[id-1].command);
     },
 });
