@@ -22,11 +22,12 @@ const Gio = imports.gi.Gio;
 const Shell = imports.gi.Shell;
 const Util = imports.misc.util;
 const Lang = imports.lang;
+const Me = imports.misc.extensionUtils.getCurrentExtension();
 
 const Config = imports.misc.config;
 
 // SSH / Apps Search Provider
-const SshSearchProvider = new Lang.Class({
+var SshSearchProvider = new Lang.Class({
     Name: 'SshSearchProvider',
 
     _init: function(title) {
@@ -97,7 +98,7 @@ const SshSearchProvider = new Lang.Class({
                     if (app)
                         icon = app.create_icon_texture(size);
                     else
-                        icon = new St.Icon({ gicon: Gio.icon_new_for_string('emblem-cm-symbolic'),
+                        icon = new St.Icon({ gicon: Gio.icon_new_for_string(Me.path + '/emblem-cm-symbolic.svg'),
                                              icon_size: size });
 
                     return icon;

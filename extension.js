@@ -32,6 +32,8 @@ const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const Panel = imports.ui.panel;
 const Util = imports.misc.util;
+const ByteArray = imports.byteArray;
+const Me = imports.misc.extensionUtils.getCurrentExtension();
 
 const Gettext = imports.gettext.domain('gnome-shell-extensions');
 const _ = Gettext.gettext;
@@ -53,8 +55,15 @@ const ConnectionManager = new Lang.Class({
         this.parent(1.0, "Connection Manager", false);
 
         this._box = new St.BoxLayout();
+        
+//        this._icon = new St.Icon({
+//            style_class: 'system-status-icon'
+//        });
+//        this._icon.gicon = Gio.icon_new_for_string(Me.path + '/icons/' + DisabledIcon +'.svg');
+        
+        
 
-        this._icon = new St.Icon({ gicon: Gio.icon_new_for_string('emblem-cm-symbolic'),
+        this._icon = new St.Icon({ gicon: Gio.icon_new_for_string(Me.path + '/emblem-cm-symbolic.svg'),
                                              icon_size: 15 });
 
         this._bin = new St.Bin({child: this._icon});
@@ -101,7 +110,7 @@ const ConnectionManager = new Lang.Class({
         if (GLib.file_test(this._configFile, GLib.FileTest.EXISTS) ) {
 
             let filedata = GLib.file_get_contents(this._configFile);
-            let jsondata = JSON.parse(filedata[1]);
+            let jsondata = JSON.parse(ByteArray.toString(filedata[1]));
             let root = jsondata['Root'];
 
             // Global Settings
