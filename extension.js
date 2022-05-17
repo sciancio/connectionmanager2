@@ -21,7 +21,7 @@ const St = imports.gi.St;
 const Gdk = imports.gi.Gdk;
 const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;
-const Lang = imports.lang;
+const GObject = imports.gi.GObject;
 const Shell = imports.gi.Shell;
 
 const Mainloop = imports.mainloop;
@@ -46,13 +46,13 @@ const Search = CM.imports.search;
 const Terminals = CM.imports.terminals;
 
 
-const ConnectionManager = new Lang.Class({
-    Name: 'ConnectionManager',
-    Extends: PanelMenu.Button,
+const ConnectionManager = new GObject.registerClass({
+    GTypeName: 'ConnectionManager',
+ }, class ConnectionManager extends PanelMenu.Button {
 
-    _init: function() {
+    _init() {
 
-        this.parent(1.0, "Connection Manager", false);
+        super._init(1.0, "Connection Manager", false);
 
         this._box = new St.BoxLayout();
         
@@ -93,17 +93,17 @@ const ConnectionManager = new Lang.Class({
         }
 
         this._readConf();
-    },
+    }
 
 
-    _readConf: function () {
+    _readConf() {
 
         this.menu.removeAll();
 
         // Rewrite _setOpenedSubMenu method to correctly open submenu
-        this.menu._setOpenedSubMenu = Lang.bind(this, function (submenu) {
+            this.menu._setOpenedSubMenu = submenu => {
             this._openedSubMenu = submenu;
-        });
+        }
         
         this._sshList = [];
 
@@ -137,17 +137,17 @@ const ConnectionManager = new Lang.Class({
         this.menu.addMenuItem(menuSepPref, this.menu.length);
 
         let menuPref = new PopupMenu.PopupMenuItem("Connection Manager Settings");
-        menuPref.connect('activate', Lang.bind(this, function() {
+        menuPref.connect('activate', () => {
             Util.trySpawnCommandLine('python ' + this._prefFile);
-        }));
+        });
         this.menu.addMenuItem(menuPref, this.menu.length+1);
 
         // Update ssh name list
         this._searchProvider._update(this._sshList);        
-    },
+    }
 
 
-    _readTree: function(node, parent, ident) {
+    _readTree(node, parent, ident) {
 
         let child, menuItem, menuSep, menuSub, icon, label,
             menuItemAll, iconAll, menuSepAll, menuItemTabs, iconTabs, ident_prec;
@@ -317,7 +317,7 @@ const ConnectionManager = new Lang.Class({
 
         }
         ident = ident_prec;
-    },
+    }
 
 });
 
@@ -332,7 +332,7 @@ function enable() {
     
     let file = Gio.file_new_for_path(cm._configFile);
     cm.monitor = file.monitor(Gio.FileMonitorFlags.NONE, null);
-    cm.monitor.connect('changed', Lang.bind(cm, cm._readConf));
+    cm.monitor.connect('changed', () => cm._readConf());
 }
 
 function disable() {
