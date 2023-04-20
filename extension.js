@@ -347,8 +347,8 @@ function disable() {
 
 function init(extensionMeta) {
     extensionPath = extensionMeta.path;
-    
-    let theme = imports.gi.Gtk.IconTheme.get_default();
+
+    let theme = imports.gi.St.IconTheme.new();
     if(theme!=null) {
     	theme.append_search_path(extensionPath);
     }
