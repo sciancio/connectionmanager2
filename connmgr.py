@@ -29,7 +29,7 @@ if hasattr(GLib, "set_prgname"):
 
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, Gio
-from StringIO import StringIO
+from io import StringIO
 
 import os.path
 import shutil
@@ -702,7 +702,7 @@ This involves loss of information, it is recommended to revert it.")
                 profileName = profile.get_string("visible-name")
 
                 entry3.append_text(profileName)
-                if profileName.decode('utf-8') == row[3]:
+                if profileName == row[3]:
                     entry3.set_active(index)
 
         else:
